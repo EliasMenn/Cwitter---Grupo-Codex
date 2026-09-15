@@ -31,9 +31,33 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="almacenamiento.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="almacenamiento.h" />
+		<Unit filename="global/ListaDoble.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="global/ListaDoble.h" />
+		<Unit filename="global/lista.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="global/lista.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="publicaciones.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="publicaciones.h" />
+		<Unit filename="tweets.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tweets.h" />
+		<Unit filename="usuarios.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="usuarios.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
