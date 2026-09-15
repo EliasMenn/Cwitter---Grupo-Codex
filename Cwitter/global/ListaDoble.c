@@ -17,13 +17,13 @@ int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
     }
 
     nue = malloc(sizeof(tNodo));
-    if(!aux)
+    if(!nue)
         return -1;
 
     nue->informacion = malloc(tam_informacion);
     if(!nue->informacion)
     {
-        free(aux);
+        free(nue);
         return -1;
     }
 
@@ -138,9 +138,32 @@ int obtenerPosicionN(tListaDoble* p, void* informacion, size_t tam_informacion, 
     }
 
     memcpy(informacion,act->informacion,MIN(tam_informacion,act->tam_informacion));
-    return 0
+    return 0;
 }
 
+void vaciarLista(tListaDoble *p)
+{
+    tNodo* act = *p;
+    tNodo* elim;
 
+    if(!act)
+        return;
+    while(*p != NULL)
+    {
+        elim = act;
 
+        if(act->siguiente != NULL)
+        {
+            *p = elim->siguiente;
+            (*p)->anterior = NULL;
+        }
+        else
+        {
+            *p = NULL;
+        }
+
+        free(elim->informacion);
+        free(elim);
+    }
 }
+
