@@ -2,12 +2,12 @@
 
 void mostrarPosteo(tPosteo pub)
 {
-    printf("%s\n\t", pub.nombreUsuario, pub.publicacion);
+    printf("%s%s\n\t", pub.nombreUsuario, pub.publicacion);
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
 {
-    pub->nombreUsuario = user.usuario;
+    strcpy(pub->nombreUsuario, user.usuario);
     int valido = 0;
     while(!valido)
     {

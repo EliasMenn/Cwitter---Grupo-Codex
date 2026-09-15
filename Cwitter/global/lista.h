@@ -10,7 +10,8 @@ typedef enum {
     LISTA_DUPLICADO,
     LISTA_VACIA,
     LISTA_LLENA,
-    LISTA_DATO_PARCIAL
+    LISTA_DATO_PARCIAL,
+    LISTA_NO_ENCONTRADO
 }eListaRet;
 
 typedef void (*tAccion)(void *elem, void *extra);
@@ -19,15 +20,14 @@ typedef int (*tCmp)(const void *a, const void *b);
 #ifndef T_NODO
 #define T_NODO
 
-typedef struct sNodo {
+typedef struct sNodoS {
     void *dato;
     unsigned tamDato;
-    struct sNodo *sig;
-}tNodo;
+    struct sNodoS *sig;
+}tNodoS;
 #endif
-typedef tNodo *tLista;
+typedef tNodoS *tLista;
 /* faltan agregar?
-int lista_buscar(...);
 int lista_eliminar(...);
 int lista_actualizar(...);
 */
@@ -43,5 +43,6 @@ int lista_sacar_ultimo(tLista *lista, void *dato, unsigned tamDato);
 int lista_ver_primero(const tLista *lista, void *dato, unsigned tamDato);
 int lista_ver_ultimo(const tLista *lista, void *dato, unsigned tamDato);
 int lista_insertar_en_orden(tLista *lista, const void *dato, unsigned tamDato, int modo, tCmp cmp);
+int lista_buscar(const tLista *lista, void *dato, unsigned tamDato, tCmp cmp);
 
 #endif // LISTA_H_INCLUDED

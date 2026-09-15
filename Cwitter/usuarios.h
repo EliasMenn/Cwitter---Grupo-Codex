@@ -30,6 +30,16 @@ typedef enum
     USUARIO_SIN_MEMORIA
 } eUsuarioRet;
 
+typedef enum
+{
+    LOGIN_OK,
+    LOGIN_DATOS_INVALIDOS,
+    LOGIN_CREDENCIALES_INCORRECTAS
+} eLoginRet;
+
+eLoginRet usuario_logear(tLista *listaUsuarios, char *usuario, char *contrasenia, tUsuario *usuarioLogueado);
 eUsuarioRet usuario_registrar(tLista *listaUsuarios, unsigned *ultimoId, const char *usuario, const char *contrasenia);
 int usuario_comparar(const void *datoA, const void *datoB);
+int usuario_comparar_login(const void *datoA, const void *datoB);
+
 #endif
