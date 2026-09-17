@@ -7,8 +7,8 @@ void crearListaD(tListaDoble* p)
 
 int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
 {
-    tNodo* act = *p;
-    tNodo* nue;
+    tNodoD* act = *p;
+    tNodoD* nue;
 
     if(act != NULL)
     {
@@ -16,7 +16,7 @@ int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
             act = act->siguiente;
     }
 
-    nue = malloc(sizeof(tNodo));
+    nue = malloc(sizeof(tNodoD));
     if(!nue)
         return -1;
 
@@ -40,8 +40,8 @@ int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
 
 int quitarDelFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
 {
-    tNodo* act = *p;
-    tNodo* elim;
+    tNodoD* act = *p;
+    tNodoD* elim;
 
     if (act == NULL)
         return -1; // lista vacía, nada que quitar
@@ -73,8 +73,8 @@ int quitarDelFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
 
 int agregarAlComienzo(tListaDoble* p, void* informacion, size_t tam_informacion)
 {
-    tNodo* act = *p;
-    tNodo* nue = malloc(sizeof(tNodo));
+    tNodoD* act = *p;
+    tNodoD* nue = malloc(sizeof(tNodoD));
     if(!nue)
         return -1;
 
@@ -98,8 +98,8 @@ int agregarAlComienzo(tListaDoble* p, void* informacion, size_t tam_informacion)
 
 int quitarDelComienzo(tListaDoble* p, void* informacion, size_t tam_informacion)
 {
-    tNodo* act = *p;
-    tNodo* elim;
+    tNodoD* act = *p;
+    tNodoD* elim;
 
     if(!act)
         return -1;
@@ -125,7 +125,7 @@ int quitarDelComienzo(tListaDoble* p, void* informacion, size_t tam_informacion)
 int obtenerPosicionN(tListaDoble* p, void* informacion, size_t tam_informacion, int N)
 {
     int i = 0;
-    tNodo* act = *p;
+    tNodoD* act = *p;
     if(!act)
         return -1;
 
@@ -143,8 +143,8 @@ int obtenerPosicionN(tListaDoble* p, void* informacion, size_t tam_informacion, 
 
 void vaciarLista(tListaDoble *p)
 {
-    tNodo* act = *p;
-    tNodo* elim;
+    tNodoD* act = *p;
+    tNodoD* elim;
 
     if(!act)
         return;

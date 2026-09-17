@@ -7,14 +7,14 @@
 
 #define MIN(a,b)((a) < (b) ? (a) : (b))
 
-typedef struct sNodo{
+typedef struct sNodoD{
     void* informacion;
     size_t tam_informacion;
-    struct sNodo* siguiente;
-    struct sNodo* anterior;
-}tNodo;
+    struct sNodoD* siguiente;
+    struct sNodoD* anterior;
+}tNodoD;
 
-typedef tNodo* tListaDoble;
+typedef tNodoD* tListaDoble;
 
 void crearListaD(tListaDoble* p);
 int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion);

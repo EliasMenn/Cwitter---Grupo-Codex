@@ -2,6 +2,7 @@
 #define PUBLICACIONES_H_INCLUDED
 
 #define MAX_PUBLICACIONES 100
+#define MAX_CHARS 80
 #define CAMBIO_PUBLICACIONES 10
 #define LARGO_MAX 141
 #include "global/ListaDoble.h"
@@ -13,6 +14,6 @@ typedef struct{
 }tPosteo;
 
 void mostrarPosteo(tPosteo pub);
-void crearPosteo (tPosteo pub, tUsuario user);
+void crearPosteo (tPosteo * pub, tUsuario user);
 
 #endif // PUBLICACIONES_H_INCLUDED

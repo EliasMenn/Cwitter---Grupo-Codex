@@ -22,14 +22,14 @@ void lista_recorrer(const tLista *lista, tAccion accion, void *extra)
 
 int lista_insertar_final(tLista *lista, const void *dato, unsigned tamDato)
 {
-    tNodo *nodoNuevo;
+    tNodoS *nodoNuevo;
 
     while (*lista) {
 
         lista = &(*lista)->sig;
     }
 
-    nodoNuevo = (tNodo*)malloc(sizeof(tNodo));
+    nodoNuevo = (tNodoS*)malloc(sizeof(tNodoS));
     if(!nodoNuevo) {
 
         return LISTA_SIN_MEM;
@@ -53,7 +53,7 @@ int lista_insertar_final(tLista *lista, const void *dato, unsigned tamDato)
 
 int lista_insertar_comienzo(tLista *lista, const void *dato, unsigned tamDato)
 {
-    tNodo *nodoNuevo = (tNodo*)malloc(sizeof(tNodo));
+    tNodoS *nodoNuevo = (tNodoS*)malloc(sizeof(tNodoS));
     if(!nodoNuevo) {
 
         return LISTA_SIN_MEM;
@@ -79,7 +79,7 @@ void lista_vaciar(tLista *lista)
 {
     while (*lista) {
 
-        tNodo *elim = *lista;
+        tNodoS *elim = *lista;
         *lista = elim->sig;
         free(elim->dato);
         free(elim);
@@ -89,7 +89,7 @@ void lista_vaciar(tLista *lista)
 
 int lista_llena(const tLista *lista, unsigned tamDato)
 {
-    tNodo *nodoNuevo = (tNodo*)malloc(sizeof(tNodo));
+    tNodoS *nodoNuevo = (tNodoS*)malloc(sizeof(tNodoS));
     void *dato = malloc(tamDato);
     free(nodoNuevo);
     free(dato);
@@ -106,7 +106,7 @@ int lista_vacia(const tLista *lista)
 
 int lista_sacar_primero(tLista *lista, void *dato, unsigned tamDato)
 {
-    tNodo *elim;
+    tNodoS *elim;
     unsigned tamDatoEnLista;
 
     if (*lista == NULL) {
@@ -184,7 +184,7 @@ int lista_ver_ultimo(const tLista *lista, void *dato, unsigned tamDato)
 
 int lista_insertar_en_orden(tLista *lista, const void *dato, unsigned tamDato, int modo, tCmp cmp)
 {
-    tNodo *nodoNuevo;
+    tNodoS *nodoNuevo;
     int comp;
 
     while (*lista && (comp = cmp(dato, (*lista)->dato)) > 0) {
@@ -197,7 +197,7 @@ int lista_insertar_en_orden(tLista *lista, const void *dato, unsigned tamDato, i
         return LISTA_DUPLICADO;
     }
 
-    nodoNuevo = (tNodo*)malloc(sizeof(tNodo));
+    nodoNuevo = (tNodoS*)malloc(sizeof(tNodoS));
     if (!nodoNuevo) {
 
         return LISTA_SIN_MEM;
@@ -219,6 +219,20 @@ int lista_insertar_en_orden(tLista *lista, const void *dato, unsigned tamDato, i
     return LISTA_TODO_OK;
 }
 
+int lista_buscar(const tLista *lista, void *dato, unsigned tamDato, tCmp cmp)
+{
+    while(*lista && cmp(dato, (*lista)->dato) != 0)
+    {
+        lista = &(*lista)->sig;
+    }
+
+    if(!*lista)
+        return LISTA_NO_ENCONTRADO;
+
+    memcpy(dato, (*lista)->dato, MIN(tamDato, (*lista)->tamDato));
+
+    return tamDato < (*lista)->tamDato ? LISTA_DATO_PARCIAL : LISTA_TODO_OK;
+}
 
 
 
