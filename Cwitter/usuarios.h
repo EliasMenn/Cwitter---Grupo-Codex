@@ -2,6 +2,7 @@
 #define USUARIOS_H_INCLUDED
 
 #include "global/lista.h"
+#include "global/pila.h"
 
 #define MIN_USUARIO 6
 #define MAX_USUARIO 21
@@ -14,7 +15,17 @@ typedef struct
     unsigned id;
     char usuario[MAX_USUARIO];
     char contrasenia[MAX_CONTRASENIA];
+    char estado; // 'A' activo, 'B' baja logica
 } tUsuario;
+
+typedef struct
+{
+    unsigned id;
+    char usuario[MAX_USUARIO];
+    long offsetDat; // Posicion en usuarios.dat
+    long offsetIdx; // Posicion en indice_usuarios.idx (para la baja logica)
+    char estado;
+} tIndiceUsuario;
 
 typedef enum
 {
@@ -34,11 +45,16 @@ typedef enum
 {
     LOGIN_OK,
     LOGIN_DATOS_INVALIDOS,
-    LOGIN_CREDENCIALES_INCORRECTAS
+    LOGIN_CREDENCIALES_INCORRECTAS,
+    LOGIN_USUARIO_NO_ENCONTRADO
 } eLoginRet;
 
-eLoginRet usuario_logear(tLista *listaUsuarios, char *usuario, char *contrasenia, tUsuario *usuarioLogueado);
-eUsuarioRet usuario_registrar(tLista *listaUsuarios, unsigned *ultimoId, const char *usuario, const char *contrasenia);
+
+
+eLoginRet usuario_logear(tLista *listaIndices, char *usuario, char *contrasenia, tUsuario *usuarioLogueado);
+eUsuarioRet usuario_registrar(tLista *listaIndices, tPila *pilaLibres, unsigned *ultimoId, const char *usuario, const char *contrasenia);
+int usuario_dar_baja(tLista *listaIndices, tPila *pilaLibres, const char *usuario);
+int usuario_modificar_contrasenia(tLista *listaIndices, const char *usuario, const char *nuevaContrasenia);
 int usuario_comparar(const void *datoA, const void *datoB);
 int usuario_comparar_login(const void *datoA, const void *datoB);
 

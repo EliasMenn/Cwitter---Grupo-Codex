@@ -3,4 +3,4 @@ obj/
 *.depend
 *.layout
 .vscode/
-Cwitter/datos/*.dat
+Cwitter/datos/

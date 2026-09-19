@@ -4,16 +4,19 @@
 #include "tweets.h"
 #include "almacenamiento.h"
 
-void mostrar_usuario(void *dato, void *extra)
+void mostrar_indice(void *dato, void *extra)
 {
-    tUsuario *usuario = (tUsuario *)dato;
+    tIndiceUsuario *indice = (tIndiceUsuario *)dato;
 
     (void)extra;
 
     printf(
-        "ID: %u | Usuario: %s\n",
-        usuario->id,
-        usuario->usuario
+        "ID: %u | Usuario: %s | Estado: %c | OffsetDat: %ld | OffsetIdx: %ld\n",
+        indice->id,
+        indice->usuario,
+        indice->estado,
+        indice->offsetDat,
+        indice->offsetIdx
     );
 }
 
@@ -64,54 +67,96 @@ void mostrar_resultado(eUsuarioRet resultado)
 }
 int main()
 {
-    tLista usuarios;
+    tLista indicesUsuarios;
+    tPila pilaLibres;
     unsigned ultimoId = 0;
     eUsuarioRet resultado;
 
-    lista_crear(&usuarios);
+    lista_crear(&indicesUsuarios);
+    crearPila(&pilaLibres);
 
-    printf("Caso 1: registro correcto\n");
-    resultado = usuario_registrar(&usuarios,&ultimoId,"franco","clave123");
+    // Cargar indices desde disco (si existen) y armar pila de libres
+    printf("Cargando base de usuarios...\n");
+    almacenamiento_cargar_indices(&indicesUsuarios, &pilaLibres, &ultimoId);
+    printf("Ultimo ID encontrado en disco: %u\n", ultimoId);
+
+    printf("\n--- Probando Registros ---\n");
+    printf("Caso 1: registro correcto franco\n");
+    resultado = usuario_registrar(&indicesUsuarios, &pilaLibres, &ultimoId, "franco", "clave123");
     mostrar_resultado(resultado);
 
-    printf("\nCaso 2: segundo usuario correcto\n");
-    resultado = usuario_registrar(&usuarios,&ultimoId,"anaana","prueba456");
+    printf("\nCaso 2: segundo usuario correcto anaana\n");
+    resultado = usuario_registrar(&indicesUsuarios, &pilaLibres, &ultimoId, "anaana", "prueba456");
     mostrar_resultado(resultado);
 
     printf("\nCaso 3: usuario duplicado\n");
-    resultado = usuario_registrar(&usuarios,&ultimoId,"franco","otraClave");
+    resultado = usuario_registrar(&indicesUsuarios, &pilaLibres, &ultimoId, "franco", "otraClave");
     mostrar_resultado(resultado);
 
-    printf("\nCaso 4: usuario vacio\n");
-    resultado = usuario_registrar(&usuarios,&ultimoId,"","clave789");
+    printf("\nIndices de usuarios en memoria:\n");
+    lista_recorrer(&indicesUsuarios, mostrar_indice, NULL);
+
+    tUsuario usuarioLogueado;
+    eLoginRet retLogin;
+
+    printf("\n--- Probando Modificaciones ---\n");
+    printf("Modificando contraseña de 'anaana' a 'nuevaclave123'...\n");
+    if(usuario_modificar_contrasenia(&indicesUsuarios, "anaana", "nuevaclave123"))
+    {
+        printf("Contraseña modificada en el disco.\n");
+    }
+
+    printf("Intentando loguear con 'anaana' y la clave VIEJA ('prueba456')...\n");
+    retLogin = usuario_logear(&indicesUsuarios, "anaana", "prueba456", &usuarioLogueado);
+    if(retLogin == LOGIN_OK)
+    {
+        printf("Login OK! Bienvenido %s\n", usuarioLogueado.usuario);
+    }
+    else
+    {
+        printf("Login fallido correctamente. Codigo: %d\n", retLogin);
+    }
+
+    printf("Intentando loguear con 'anaana' y la clave NUEVA ('nuevaclave123')...\n");
+    retLogin = usuario_logear(&indicesUsuarios, "anaana", "nuevaclave123", &usuarioLogueado);
+    if(retLogin == LOGIN_OK)
+    {
+        printf("Login OK! Bienvenido %s\n", usuarioLogueado.usuario);
+    }
+    else
+    {
+        printf("Login fallido. Codigo: %d\n", retLogin);
+    }
+
+    printf("\n--- Probando Bajas y Reutilizacion ---\n");
+    printf("Dando de baja a 'franco'...\n");
+    usuario_dar_baja(&indicesUsuarios, &pilaLibres, "franco");
+
+    printf("\nIndices de usuarios en memoria tras la baja:\n");
+    lista_recorrer(&indicesUsuarios, mostrar_indice, NULL);
+
+    printf("\nIntentando loguear con 'franco' dado de baja...\n");
+    retLogin = usuario_logear(&indicesUsuarios, "franco", "clave123", &usuarioLogueado);
+    if(retLogin == LOGIN_OK)
+    {
+        printf("Login OK! Bienvenido %s\n", usuarioLogueado.usuario);
+    }
+    else
+    {
+        printf("Login fallido. Codigo: %d\n", retLogin);
+    }
+
+    printf("\nCaso 4: registrando 'nuevoUser' para verificar reciclaje de espacio...\n");
+    resultado = usuario_registrar(&indicesUsuarios, &pilaLibres, &ultimoId, "nuevoUser", "nueva123");
     mostrar_resultado(resultado);
 
-    printf("\nCaso 5: usuario de 21 caracteres\n");
-    resultado = usuario_registrar(&usuarios, &ultimoId, "123456789012345678901", "clave789");
-    mostrar_resultado(resultado);
+    printf("\nIndices de usuarios tras registrar al nuevo:\n");
+    lista_recorrer(&indicesUsuarios, mostrar_indice, NULL);
 
-    printf("\nCaso 6: usuario de 5 caracteres\n");
-    resultado = usuario_registrar(&usuarios, &ultimoId, "juane", "abc123");
-    mostrar_resultado(resultado);
+    printf("\nUltimo ID utilizado total: %u\n", ultimoId);
 
-    printf("\nCaso 7: contrasenia de 5 caracteres\n");
-    resultado = usuario_registrar(&usuarios, &ultimoId, "juanes", "abc12");
-    mostrar_resultado(resultado);
-
-    printf("\nCaso 8: usuario y contrasenia de 6 caracteres\n");
-    resultado = usuario_registrar(&usuarios, &ultimoId, "juanes", "abc123");
-    mostrar_resultado(resultado);
-
-    printf("\nUsuarios registrados:\n");
-    lista_recorrer(
-        &usuarios,
-        mostrar_usuario,
-        NULL
-    );
-
-    printf("\nUltimo ID utilizado: %u\n", ultimoId);
-
-    lista_vaciar(&usuarios);
+    lista_vaciar(&indicesUsuarios);
+    vaciarPila(&pilaLibres);
 
     return 0;
 }
