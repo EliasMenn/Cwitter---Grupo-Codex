@@ -43,6 +43,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="global/lista.h" />
+		<Unit filename="global/pila.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="global/pila.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

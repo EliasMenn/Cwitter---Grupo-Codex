@@ -1,50 +1,46 @@
 #include "almacenamiento.h"
-#include "usuarios.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-int almacenamiento_guardar_usuarios(const tLista *listaUsuarios)
+typedef struct {
+    long offsetDat;
+    long offsetIdx;
+} tEspacioLibre;
+
+int almacenamiento_cargar_indices(tLista *listaIndices, tPila *pilaLibres, unsigned *ultimoId)
 {
-    FILE *archivo = fopen(ARCHIVO_USUARIOS, "wb");
-    if(archivo == NULL)
-    {
-        return 0;
-    }
-
-    // Usamos el recorrido de la lista genérica para escribir cada elemento
-    lista_recorrer(listaUsuarios, accion_guardar_usuario, archivo);
-
-    fclose(archivo);
-    return 1;
-}
-
-int almacenamiento_cargar_usuarios(tLista *listaUsuarios, unsigned *ultimoId)
-{
-    FILE *archivo = fopen(ARCHIVO_USUARIOS, "rb");
-    tUsuario aux;
+    FILE *archivo = fopen(ARCHIVO_INDICES_USUARIOS, "rb");
+    tIndiceUsuario aux;
     int leidos;
     unsigned idMax = 0;
 
-    // Si el archivo no existe (primera ejecución), no hay usuarios registrados todavia
+    *ultimoId = 0;
+
     if(archivo == NULL)
     {
-        *ultimoId = 0;
         return 1;
     }
 
-    leidos = fread(&aux, sizeof(tUsuario), 1, archivo);
+    leidos = fread(&aux, sizeof(tIndiceUsuario), 1, archivo);
     while(leidos == 1)
     {
-        // Cargamos el usuario en la lista en memoria
-        lista_insertar_en_orden(listaUsuarios, &aux, sizeof(tUsuario), INSERTAR_SIN_DUP, usuario_comparar);
-
-        // Guardamos cual es el ID más alto para seguir desde ahí cuando se registre un nuevo usuario
-        if(aux.id > idMax)
+        if(aux.estado == 'A')
         {
-            idMax = aux.id;
+            lista_insertar_en_orden(listaIndices, &aux, sizeof(tIndiceUsuario), INSERTAR_SIN_DUP, usuario_comparar);
+            if(aux.id > idMax)
+            {
+                idMax = aux.id;
+            }
+        }
+        else if(aux.estado == 'B')
+        {
+            tEspacioLibre hueco;
+            hueco.offsetDat = aux.offsetDat;
+            hueco.offsetIdx = aux.offsetIdx;
+            ponerEnPila(pilaLibres, &hueco, sizeof(tEspacioLibre));
         }
 
-        leidos = fread(&aux, sizeof(tUsuario), 1, archivo);
+        leidos = fread(&aux, sizeof(tIndiceUsuario), 1, archivo);
     }
 
     *ultimoId = idMax;
@@ -52,10 +48,141 @@ int almacenamiento_cargar_usuarios(tLista *listaUsuarios, unsigned *ultimoId)
     return 1;
 }
 
-void accion_guardar_usuario(void *dato, void *extra)
+int almacenamiento_guardar_nuevo_usuario(tUsuario *usuario, tIndiceUsuario *indiceACompletar, tPila *pilaLibres)
 {
-    tUsuario *usuario = (tUsuario *)dato;
-    FILE *archivo = (FILE *)extra;
+    FILE *archDat = fopen(ARCHIVO_USUARIOS, "r+b");
+    FILE *archIdx = fopen(ARCHIVO_INDICES_USUARIOS, "r+b");
 
-    fwrite(usuario, sizeof(tUsuario), 1, archivo);
+    if(archDat == NULL)
+    {
+        archDat = fopen(ARCHIVO_USUARIOS, "w+b");
+    }
+
+    if(archIdx == NULL)
+    {
+        archIdx = fopen(ARCHIVO_INDICES_USUARIOS, "w+b");
+    }
+
+    if(archDat == NULL || archIdx == NULL)
+    {
+        if(archDat)
+        {
+            fclose(archDat);
+        }
+        if(archIdx)
+        {
+            fclose(archIdx);
+        }
+        return 0;
+    }
+
+    tEspacioLibre hueco;
+    long posDat, posIdx;
+
+    if(sacarDePila(pilaLibres, &hueco, sizeof(tEspacioLibre)))
+    {
+        posDat = hueco.offsetDat;
+        posIdx = hueco.offsetIdx;
+    }
+    else
+    {
+        fseek(archDat, 0, SEEK_END);
+        fseek(archIdx, 0, SEEK_END);
+        posDat = ftell(archDat);
+        posIdx = ftell(archIdx);
+    }
+
+    fseek(archDat, posDat, SEEK_SET);
+    fwrite(usuario, sizeof(tUsuario), 1, archDat);
+
+    indiceACompletar->offsetDat = posDat;
+    indiceACompletar->offsetIdx = posIdx;
+
+    fseek(archIdx, posIdx, SEEK_SET);
+    fwrite(indiceACompletar, sizeof(tIndiceUsuario), 1, archIdx);
+
+    fclose(archDat);
+    fclose(archIdx);
+
+    return 1;
+}
+
+int almacenamiento_leer_usuario_offset(long offset, tUsuario *usuarioDestino)
+{
+    FILE *archDat = fopen(ARCHIVO_USUARIOS, "rb");
+    
+    if(!archDat)
+    {
+        return 0;
+    }
+
+    fseek(archDat, offset, SEEK_SET);
+    int leidos = fread(usuarioDestino, sizeof(tUsuario), 1, archDat);
+    fclose(archDat);
+
+    return leidos == 1;
+}
+
+int almacenamiento_baja_usuario(long offsetDat, long offsetIdx, tPila *pilaLibres)
+{
+    FILE *archDat = fopen(ARCHIVO_USUARIOS, "r+b");
+    FILE *archIdx = fopen(ARCHIVO_INDICES_USUARIOS, "r+b");
+
+    if(!archDat || !archIdx)
+    {
+        if(archDat)
+        {
+            fclose(archDat);
+        }
+        if(archIdx)
+        {
+            fclose(archIdx);
+        }
+        return 0;
+    }
+
+    tUsuario usuario;
+    tIndiceUsuario indice;
+    tEspacioLibre hueco;
+
+    fseek(archDat, offsetDat, SEEK_SET);
+    if(fread(&usuario, sizeof(tUsuario), 1, archDat) == 1)
+    {
+        usuario.estado = 'B';
+        fseek(archDat, offsetDat, SEEK_SET);
+        fwrite(&usuario, sizeof(tUsuario), 1, archDat);
+    }
+
+    fseek(archIdx, offsetIdx, SEEK_SET);
+    if(fread(&indice, sizeof(tIndiceUsuario), 1, archIdx) == 1)
+    {
+        indice.estado = 'B';
+        fseek(archIdx, offsetIdx, SEEK_SET);
+        fwrite(&indice, sizeof(tIndiceUsuario), 1, archIdx);
+    }
+
+    fclose(archDat);
+    fclose(archIdx);
+
+    hueco.offsetDat = offsetDat;
+    hueco.offsetIdx = offsetIdx;
+    ponerEnPila(pilaLibres, &hueco, sizeof(tEspacioLibre));
+
+    return 1;
+}
+
+int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualizado)
+{
+    FILE *archDat = fopen(ARCHIVO_USUARIOS, "r+b");
+    
+    if(!archDat)
+    {
+        return 0;
+    }
+
+    fseek(archDat, offsetDat, SEEK_SET);
+    fwrite(usuarioActualizado, sizeof(tUsuario), 1, archDat);
+    fclose(archDat);
+
+    return 1;
 }
