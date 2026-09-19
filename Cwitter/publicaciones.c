@@ -123,8 +123,8 @@ void posteoAnterior(tFeed* feed)
 
     if(feed->posteo_actual == 0)
     {
-        cargados = cargarNPosteos(feed->p, feed->inicio,
-                                  CAMBIO_PUBLICACIONES);
+        cargados = cargarNPosteosAtras(feed->p, feed->inicio,
+                                        CAMBIO_PUBLICACIONES);
 
         if(cargados > 0)
         {
@@ -148,12 +148,12 @@ void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroF
 {
     crearListaD(feed->p);
     feed->posteo_actual = -1;
-    feed->offset = cargarNPosteos(feed->p, 0,
+    feed->offset = cargarNPosteosFiltrado(feed->p, 0,
                    MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro)*sizeof(tPosteo);
     feed->inicio = 0;
 }
 
-void siguientePosteo(tFeed* feed)
+void siguientePosteoFiltrados(tFeed* feed)
 {
     tPosteo posteo;
 
@@ -164,7 +164,7 @@ void siguientePosteo(tFeed* feed)
     }
 }
 
-void posteoAnterior(tFeed* feed)
+void posteoAnteriorFiltrado(tFeed* feed)
 {
     tPosteo posteo;
 

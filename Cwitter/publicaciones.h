@@ -21,7 +21,7 @@ typedef struct{
     char publicacion[LARGO_MAX];
 }tPosteo;
 
-void siguientePosteo(tPosteo feed);
+void siguientePosteo(tFeed* feed);
 void mostrarPosteo(tPosteo pub);
 void crearPosteo (tPosteo * pub, tUsuario user);
 
