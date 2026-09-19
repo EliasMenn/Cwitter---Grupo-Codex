@@ -82,9 +82,18 @@ int cmpTexto(void* a, void* b)
 void iniciarFeed(tFeed* feed)
 {
     crearListaD(feed->p);
-    feed->posteo_actual = -1;
-    feed->offset = cargarNPosteos(feed->p, 0,
-                   MAX_PUBLICACIONES, agregarAlFinal)*sizeof(tPosteo);
+    feed->posteo_actual = 1;
+    FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
+    if(posteos)
+    {
+        feed->offset = 0;
+    }
+    else
+    {
+        feed->offset = cargarNPosteos(feed->p, 0,
+                       MAX_PUBLICACIONES, agregarAlFinal)*sizeof(tPosteo);
+    }
+
     feed->inicio = 0;
 }
 

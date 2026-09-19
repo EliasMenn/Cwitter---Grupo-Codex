@@ -257,3 +257,15 @@ int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n)
     fclose(publicacion);
     return cargados;
 }
+
+int guardarPosteo(tUsuario usuario)
+{
+    tPosteo pub;
+    FILE* posteo = fopen(ARCHIVO_POSTEOS,"ab");
+    if(!posteo)
+        return -1;
+    crearPosteo(&pub, usuario);
+    fwrite(&pub,sizeof(tPosteo),1,posteo);
+    fclose(posteo);
+    return 0;
+}

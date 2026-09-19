@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "usuarios.h"
-#include "tweets.h"
+#include "publicaciones.h"
 #include "almacenamiento.h"
 
 void mostrar_indice(void *dato, void *extra)
@@ -71,6 +71,9 @@ int main()
     tPila pilaLibres;
     unsigned ultimoId = 0;
     eUsuarioRet resultado;
+
+    tFeed feed;
+    iniciarFeed(&feed);
 
     lista_crear(&indicesUsuarios);
     crearPila(&pilaLibres);
@@ -149,6 +152,12 @@ int main()
     printf("\nCaso 4: registrando 'nuevoUser' para verificar reciclaje de espacio...\n");
     resultado = usuario_registrar(&indicesUsuarios, &pilaLibres, &ultimoId, "nuevoUser", "nueva123");
     mostrar_resultado(resultado);
+
+    guardarPosteo(usuarioLogueado);
+
+    cargarNPosteos(&feed.p,0,MAX_PUBLICACIONES,agregarAlComienzo);
+
+    siguientePosteo(&feed);
 
     printf("\nIndices de usuarios tras registrar al nuevo:\n");
     lista_recorrer(&indicesUsuarios, mostrar_indice, NULL);

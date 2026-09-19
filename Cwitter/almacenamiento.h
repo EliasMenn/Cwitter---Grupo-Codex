@@ -19,4 +19,5 @@ int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteo
 int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
                            int cmp(void* a, void* b), void* parametro);
 int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n);
+int guardarPosteo(tUsuario usuario);
 #endif // ALMACENAMIENTO_H_INCLUDED

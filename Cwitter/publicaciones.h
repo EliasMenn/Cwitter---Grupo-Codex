@@ -24,5 +24,12 @@ typedef struct{
 void siguientePosteo(tFeed* feed);
 void mostrarPosteo(tPosteo pub);
 void crearPosteo (tPosteo * pub, tUsuario user);
+void iniciarFeed(tFeed* feed);
+void posteoAnterior(tFeed* feed);
+void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroFiltro);
+void siguientePosteoFiltrados(tFeed* feed);
+void posteoAnteriorFiltrado(tFeed* feed);
+int cmpNombreUsuario(void* a, void* b);
+int cmpTexto(void* a, void* b);
 
 #endif // PUBLICACIONES_H_INCLUDED

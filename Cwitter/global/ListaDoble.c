@@ -2,7 +2,7 @@
 
 void crearListaD(tListaDoble* p)
 {
-    *p = NULL;
+    p = NULL;
 }
 
 int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
@@ -127,7 +127,7 @@ int obtenerPosicionN(tListaDoble* p, void* informacion, size_t tam_informacion, 
 {
     int i = 0;
     tNodoD* act = *p;
-    if(!act|| N < 0)
+    if(!act)
         return -1;
 
     while(i<N)
