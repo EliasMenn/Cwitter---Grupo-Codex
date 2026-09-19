@@ -78,3 +78,37 @@ int cmpTexto(void* a, void* b)
 
     return (*pat == '\0') ? 0 : 1;   // 0 = match, 1 = no match
 }
+
+void iniciarFeed(tFeed* feed)
+{
+    crearListaD(feed->p);
+    feed->offset = 0;
+    feed->posteo_actual = 0;
+}
+
+void siguientePosteo(tFeed* feed)
+{
+    tPosteo posteo;
+    int i, cargados;
+
+    if(feed->posteo_actual == MAX_PUBLICACIONES)
+    {
+        cargados = cargarNPosteos(feed->p, feed->offset,
+                                  CAMBIO_PUBLICACIONES, agregarAlFinal);
+
+        if(cargados > 0)
+        {
+            for(i = 0; i < cargados; i++)
+                quitarDelComienzo(feed->p, &posteo, sizeof(tPosteo));
+
+            feed->posteo_actual -= cargados;
+            feed->offset += cargados * sizeof(tPosteo);
+        }
+    }
+
+    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual))
+    {
+        mostrarPosteo(posteo);
+        feed->posteo_actual++;
+    }
+}

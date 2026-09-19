@@ -9,10 +9,16 @@
 #include "usuarios.h"
 
 typedef struct{
+   tListaDoble *p;
+   unsigned posteo_actual;
+   unsigned offset;
+}tFeed;
+
+typedef struct{
     char nombreUsuario[MAX_USUARIO];
     char publicacion[LARGO_MAX];
 }tPosteo;
-
+void siguientePosteo(tPosteo pub);
 void mostrarPosteo(tPosteo pub);
 void crearPosteo (tPosteo * pub, tUsuario user);
 
