@@ -7,18 +7,21 @@
 #define LARGO_MAX 141
 #include "global/ListaDoble.h"
 #include "usuarios.h"
-
+#include "almacenamiento.h"
 typedef struct{
    tListaDoble *p;
    unsigned posteo_actual;
    unsigned offset;
+   unsigned inicio;
 }tFeed;
 
 typedef struct{
+    unsigned id;
     char nombreUsuario[MAX_USUARIO];
     char publicacion[LARGO_MAX];
 }tPosteo;
-void siguientePosteo(tPosteo pub);
+
+void siguientePosteo(tPosteo feed);
 void mostrarPosteo(tPosteo pub);
 void crearPosteo (tPosteo * pub, tUsuario user);
 

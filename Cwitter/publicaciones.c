@@ -82,8 +82,10 @@ int cmpTexto(void* a, void* b)
 void iniciarFeed(tFeed* feed)
 {
     crearListaD(feed->p);
-    feed->offset = 0;
-    feed->posteo_actual = 0;
+    feed->posteo_actual = -1;
+    feed->offset = cargarNPosteos(feed->p, 0,
+                   MAX_PUBLICACIONES, agregarAlFinal)*sizeof(tPosteo);
+    feed->inicio = 0;
 }
 
 void siguientePosteo(tFeed* feed)
@@ -103,12 +105,73 @@ void siguientePosteo(tFeed* feed)
 
             feed->posteo_actual -= cargados;
             feed->offset += cargados * sizeof(tPosteo);
+            feed->inicio += cargados * sizeof(tPosteo);
         }
     }
 
-    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual))
+    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual++;
     }
 }
+
+void posteoAnterior(tFeed* feed)
+{
+    tPosteo posteo;
+    int i, cargados;
+
+    if(feed->posteo_actual == 0)
+    {
+        cargados = cargarNPosteos(feed->p, feed->inicio,
+                                  CAMBIO_PUBLICACIONES);
+
+        if(cargados > 0)
+        {
+            for(i = 0; i < cargados; i++)
+                quitarDelFinal(feed->p, &posteo, sizeof(tPosteo));
+
+            feed->posteo_actual += cargados;
+            feed->offset -= cargados * sizeof(tPosteo);
+            feed->inicio -= cargados * sizeof(tPosteo);
+        }
+    }
+
+    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    {
+        mostrarPosteo(posteo);
+        feed->posteo_actual--;
+    }
+}
+
+void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroFiltro)
+{
+    crearListaD(feed->p);
+    feed->posteo_actual = -1;
+    feed->offset = cargarNPosteos(feed->p, 0,
+                   MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro)*sizeof(tPosteo);
+    feed->inicio = 0;
+}
+
+void siguientePosteo(tFeed* feed)
+{
+    tPosteo posteo;
+
+    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    {
+        mostrarPosteo(posteo);
+        feed->posteo_actual++;
+    }
+}
+
+void posteoAnterior(tFeed* feed)
+{
+    tPosteo posteo;
+
+    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    {
+        mostrarPosteo(posteo);
+        feed->posteo_actual--;
+    }
+}
+// POR TEMAS DE PERFORMANCE/ DIFICULTAD NO SE TOMA EN CUENTA MAS DE 100 MENSAJES FILTRADOS, ES DECIR, SIEMPRE SE TOMARAN EN CUENTA LOS ULTIMOS 100 QUE COINCIDAN CON EL FILTRO

@@ -197,7 +197,7 @@ int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteo
         printf("Hubo un error al abrir el archivo\n");
         return 0;
     }
-    fseek(posteos,offset*sizeof(tPosteo),SEEK_SET);
+    fseek(posteos,*offset,SEEK_SET);
     while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
     {
         Func(listaDoble,&publicacion,sizeof(tPosteo));
@@ -218,7 +218,7 @@ int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned ca
         printf("Hubo un error al abrir el archivo\n");
         return 0;
     }
-    fseek(posteos,offset*sizeof(tPosteo),SEEK_SET);
+    fseek(posteos,*offset,SEEK_SET);
     while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
     {
         if(cmp(posteos, parametro) == 0)
@@ -227,6 +227,33 @@ int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned ca
             i++;
         }
     }
+
     fclose(posteos);
     return i;
+}
+
+int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n)
+{
+    FILE* publicacion = fopen(ARCHIVO_POSTEOS, "rb");
+    tPosteo posteo;
+    long pos = *inicio;
+    int cargados = 0, ok = 1;
+
+    if(!publicacion)
+        return 0;
+
+    while(ok && cargados < n && pos >= (long)sizeof(tPosteo))
+    {
+        if(fseek(publicacion, pos - (long)sizeof(tPosteo), SEEK_SET) == 0 &&
+           fread(&posteo, sizeof(tPosteo), 1, publicacion) == 1)
+        {
+            pos -= (long)sizeof(tPosteo);
+            agregarAlComienzo(p, &posteo, sizeof(tPosteo));
+            cargados++;
+        }
+        else
+            ok = 0;
+    }
+    fclose(publicacion);
+    return cargados;
 }
