@@ -110,7 +110,7 @@ int almacenamiento_guardar_nuevo_usuario(tUsuario *usuario, tIndiceUsuario *indi
 int almacenamiento_leer_usuario_offset(long offset, tUsuario *usuarioDestino)
 {
     FILE *archDat = fopen(ARCHIVO_USUARIOS, "rb");
-    
+
     if(!archDat)
     {
         return 0;
@@ -174,7 +174,7 @@ int almacenamiento_baja_usuario(long offsetDat, long offsetIdx, tPila *pilaLibre
 int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualizado)
 {
     FILE *archDat = fopen(ARCHIVO_USUARIOS, "r+b");
-    
+
     if(!archDat)
     {
         return 0;
@@ -185,4 +185,48 @@ int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualiza
     fclose(archDat);
 
     return 1;
+}
+
+int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion))
+{
+    unsigned i = 0;
+    tPosteo publicacion;
+    FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
+    if(!posteos)
+    {
+        printf("Hubo un error al abrir el archivo\n");
+        return 0;
+    }
+    fseek(posteos,offset*sizeof(tPosteo),SEEK_SET);
+    while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
+    {
+        Func(listaDoble,&publicacion,sizeof(tPosteo));
+        i++;
+    }
+    fclose(posteos);
+    return i;
+}
+
+int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
+                           int cmp(void* a, void* b), void* parametro)
+{
+    unsigned i = 0;
+    tPosteo publicacion;
+    FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
+    if(!posteos)
+    {
+        printf("Hubo un error al abrir el archivo\n");
+        return 0;
+    }
+    fseek(posteos,offset*sizeof(tPosteo),SEEK_SET);
+    while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
+    {
+        if(cmp(posteos, parametro) == 0)
+        {
+            Func(listaDoble,&publicacion,sizeof(tPosteo));
+            i++;
+        }
+    }
+    fclose(posteos);
+    return i;
 }
