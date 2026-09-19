@@ -9,6 +9,7 @@
 #include "usuarios.h"
 
 typedef struct{
+    unsigned id;
     char nombreUsuario[MAX_USUARIO];
     char publicacion[LARGO_MAX];
 }tPosteo;
