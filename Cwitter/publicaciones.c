@@ -35,3 +35,46 @@ void crearPosteo (tPosteo* pub, tUsuario user)
         }
     }
 }
+
+int cmpNombreUsuario(void* a, void* b)
+{
+    tPosteo* n1 = (tPosteo*) a;
+    tPosteo* n2 = (tPosteo*) b;
+
+    return strcmp(n1->nombreUsuario, n2->nombreUsuario);
+}
+
+int cmpTexto(void* a, void* b)
+{
+    tPosteo* n1 = (tPosteo*) a;
+    tPosteo* n2 = (tPosteo*) b;
+
+    const char *str = n1->publicacion;   // text
+    const char *pat = n2->publicacion;   // pattern, e.g. "*quick*"
+    const char *star = NULL, *backtrack = NULL;
+
+    while (*str)
+    {
+        if (*pat == '*')
+        {
+            star = pat++;
+            backtrack = str;
+        }
+        else if (*pat == '?' || *pat == *str)
+        {
+            pat++;
+            str++;
+        }
+        else if (star)
+        {
+            pat = star + 1;
+            str = ++backtrack;
+        }
+        else return 1;   // no match
+    }
+
+    while (*pat == '*')
+        pat++;
+
+    return (*pat == '\0') ? 0 : 1;   // 0 = match, 1 = no match
+}

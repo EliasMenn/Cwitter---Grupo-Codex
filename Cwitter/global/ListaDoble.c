@@ -34,7 +34,8 @@ int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
 
     if(act != NULL)
         act->siguiente = nue;
-    *p = nue;
+    else
+        *p = nue;
     return 0;
 }
 

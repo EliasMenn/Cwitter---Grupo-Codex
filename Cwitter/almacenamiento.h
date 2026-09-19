@@ -15,7 +15,7 @@ int almacenamiento_guardar_nuevo_usuario(tUsuario *usuario, tIndiceUsuario *indi
 int almacenamiento_leer_usuario_offset(long offset, tUsuario *usuarioDestino);
 int almacenamiento_baja_usuario(long offsetDat, long offsetIdx, tPila *pilaLibres);
 int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualizado);
-int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos);
+int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion));
 int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
                            int cmp(void* a, void* b), void* parametro);
 #endif // ALMACENAMIENTO_H_INCLUDED
