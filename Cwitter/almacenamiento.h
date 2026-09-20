@@ -11,6 +11,7 @@
 #define ARCHIVO_POSTEOS "datos/posteos.dat"
 #define ARCHIVO_POSTEOS_TEMP "datos/posteos_temp.dat"
 #define ARCHIVO_POSTEOS_NUE "datos/posteos_nue.dat"
+
 int almacenamiento_cargar_indices(tLista *listaIndices, tPila *pilaLibres, unsigned *ultimoId);
 int almacenamiento_guardar_nuevo_usuario(tUsuario *usuario, tIndiceUsuario *indiceACompletar, tPila *pilaLibres);
 int almacenamiento_leer_usuario_offset(long offset, tUsuario *usuarioDestino);
@@ -21,4 +22,5 @@ int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned ca
                            int cmp(void* a, void* b), void* parametro);
 int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n);
 int guardarPosteo(tUsuario usuario);
+int combinarPosteos();
 #endif // ALMACENAMIENTO_H_INCLUDED
