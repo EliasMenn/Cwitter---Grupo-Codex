@@ -23,4 +23,6 @@ int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned ca
 int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n);
 int guardarPosteo(tUsuario usuario);
 int combinarPosteos();
+unsigned almacenamiento_obtener_proximo_id_posteo(void);
+int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario);
 #endif // ALMACENAMIENTO_H_INCLUDED
