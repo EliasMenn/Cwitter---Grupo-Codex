@@ -298,12 +298,6 @@ int combinarPosteos()
         fclose(posteo);
         return -1;
     }
-    FILE* posteo = fopen(ARCHIVO_POSTEOS,"rb");
-    if(!posteo)
-    {
-        fclose(posteo_tmp);
-        return -1;
-    }
     while(fread(&publicacion, sizeof(tPosteo), 1, posteo_tmp) == 1)
     {
         lista_insertar_comienzo(&p,&publicacion,sizeof(tPosteo));
@@ -311,18 +305,18 @@ int combinarPosteos()
     while(lista_vacia(&p) == LISTA_TODO_OK)
     {
         lista_sacar_primero(&p,&publicacion,sizeof(tPosteo));
-        fwrite(&publicacion,sizeo(tPosteo),1,posteo_nue);
+        fwrite(&publicacion,sizeof(tPosteo),1,posteo_nue);
     }
     if(flag == 1)
     {
         while(fread(&publicacion, sizeof(tPosteo), 1, posteo) == 1)
         {
-            fwrite(&publicacion,sizeo(tPosteo),1,posteo_nue);
+            fwrite(&publicacion,sizeof(tPosteo),1,posteo_nue);
         }
         fclose(posteo);
     }
     fclose(posteo_tmp);
-    fclose(poste_nue);
+    fclose(posteo_nue);
 
     remove(ARCHIVO_POSTEOS_TEMP);
     remove(ARCHIVO_POSTEOS);
