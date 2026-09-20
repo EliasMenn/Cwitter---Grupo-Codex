@@ -259,9 +259,39 @@ int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n)
     return cargados;
 }
 
+unsigned almacenamiento_obtener_proximo_id_posteo(void)
+{
+    unsigned maxId = 0;
+    tPosteo p;
+    FILE *arch = fopen(ARCHIVO_POSTEOS, "rb");
+    if(arch)
+    {
+        while(fread(&p, sizeof(tPosteo), 1, arch) == 1)
+        {
+            if(p.id > maxId)
+                maxId = p.id;
+        }
+        fclose(arch);
+    }
+
+    FILE *archTemp = fopen(ARCHIVO_POSTEOS_TEMP, "rb");
+    if(archTemp)
+    {
+        while(fread(&p, sizeof(tPosteo), 1, archTemp) == 1)
+        {
+            if(p.id > maxId)
+                maxId = p.id;
+        }
+        fclose(archTemp);
+    }
+
+    return maxId + 1;
+}
+
 int guardarPosteo(tUsuario usuario)
 {
     tPosteo pub;
+    pub.id = almacenamiento_obtener_proximo_id_posteo();
     FILE* posteo = fopen(ARCHIVO_POSTEOS_TEMP,"ab");
     if(!posteo)
         return -1;
@@ -273,7 +303,6 @@ int guardarPosteo(tUsuario usuario)
 
 int combinarPosteos()
 {
-    int flag = 0;
     tLista p;
     lista_crear(&p);
     tPosteo publicacion;
@@ -281,21 +310,17 @@ int combinarPosteos()
     if(!posteo_tmp)
         return -1;
     FILE* posteo = fopen(ARCHIVO_POSTEOS,"rb");
-    if(!posteo)
+    if(!posteo && errno != ENOENT)
     {
-        if(errno == ENOENT)
-            flag = 1;
-        else
-        {
-            fclose(posteo_tmp);
-            return -1;
-        }
+        fclose(posteo_tmp);
+        return -1;
     }
     FILE* posteo_nue = fopen(ARCHIVO_POSTEOS_NUE,"wb");
     if(!posteo_nue)
     {
         fclose(posteo_tmp);
-        fclose(posteo);
+        if(posteo)
+            fclose(posteo);
         return -1;
     }
     while(fread(&publicacion, sizeof(tPosteo), 1, posteo_tmp) == 1)
@@ -307,7 +332,7 @@ int combinarPosteos()
         lista_sacar_primero(&p,&publicacion,sizeof(tPosteo));
         fwrite(&publicacion,sizeof(tPosteo),1,posteo_nue);
     }
-    if(flag == 1)
+    if(posteo != NULL)
     {
         while(fread(&publicacion, sizeof(tPosteo), 1, posteo) == 1)
         {
@@ -322,4 +347,62 @@ int combinarPosteos()
     remove(ARCHIVO_POSTEOS);
     rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
     return 0;
+}
+
+int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
+{
+    combinarPosteos();
+
+    FILE *archOrig = fopen(ARCHIVO_POSTEOS, "rb");
+    if(!archOrig)
+    {
+        return 0;
+    }
+
+    FILE *archNue = fopen(ARCHIVO_POSTEOS_NUE, "wb");
+    if(!archNue)
+    {
+        fclose(archOrig);
+        return -2;
+    }
+
+    tPosteo pub;
+    int encontrado = 0;
+    int noAutorizado = 0;
+
+    while(fread(&pub, sizeof(tPosteo), 1, archOrig) == 1)
+    {
+        if(pub.id == idPosteo)
+        {
+            encontrado = 1;
+            if(strcmp(pub.nombreUsuario, nombreUsuario) != 0)
+            {
+                noAutorizado = 1;
+                fwrite(&pub, sizeof(tPosteo), 1, archNue); // Se conserva el tweet en el archivo nuevo
+            }
+        }
+        else
+        {
+            fwrite(&pub, sizeof(tPosteo), 1, archNue); // Se conserva el tweet en el archivo nuevo
+        }
+    }
+
+    fclose(archOrig);
+    fclose(archNue);
+
+    if(!encontrado)
+    {
+        remove(ARCHIVO_POSTEOS_NUE);
+        return 0; // Tweet no encontrado
+    }
+
+    if(noAutorizado)
+    {
+        remove(ARCHIVO_POSTEOS_NUE);
+        return -1; // No pertenece al usuario
+    }
+
+    remove(ARCHIVO_POSTEOS);
+    rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
+    return 1;
 }

@@ -2,7 +2,7 @@
 
 void mostrarPosteo(tPosteo pub)
 {
-    printf("%s\n\t%s\n", pub.nombreUsuario, pub.publicacion);
+    printf("[Tweet #%u] @%s:\n  \"%s\"\n", pub.id, pub.nombreUsuario, pub.publicacion);
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
