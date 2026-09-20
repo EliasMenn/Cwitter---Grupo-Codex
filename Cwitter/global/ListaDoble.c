@@ -34,7 +34,8 @@ int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
 
     if(act != NULL)
         act->siguiente = nue;
-
+    else
+        *p = nue;
     return 0;
 }
 
@@ -143,27 +144,65 @@ int obtenerPosicionN(tListaDoble* p, void* informacion, size_t tam_informacion, 
 
 void vaciarLista(tListaDoble *p)
 {
-    tNodoD* act = *p;
     tNodoD* elim;
 
-    if(!act)
-        return;
     while(*p != NULL)
     {
-        elim = act;
-
-        if(act->siguiente != NULL)
-        {
-            *p = elim->siguiente;
+        elim = *p;
+        *p = elim->siguiente;
+        if(*p != NULL)
             (*p)->anterior = NULL;
-        }
-        else
-        {
-            *p = NULL;
-        }
 
         free(elim->informacion);
         free(elim);
+    }
+}
+
+int eliminarDeListaDoble(tListaDoble *p, const void *clave, void *dest, size_t tamDest, tCmpD cmp)
+{
+    tNodoD *act = *p;
+
+    while(act != NULL && cmp(clave, act->informacion) != 0)
+    {
+        act = act->siguiente;
+    }
+
+    if(act == NULL)
+        return 0;
+
+    if(dest != NULL)
+    {
+        memcpy(dest, act->informacion, MIN(tamDest, act->tam_informacion));
+    }
+
+
+    if(act->anterior != NULL)
+    {
+        act->anterior->siguiente = act->siguiente;
+    }
+    else
+    {
+        *p = act->siguiente;
+    }
+
+    if(act->siguiente != NULL)
+    {
+        act->siguiente->anterior = act->anterior;
+    }
+
+    free(act->informacion);
+    free(act);
+
+    return 1;
+}
+
+void recorrerListaDoble(const tListaDoble *p, tAccionD accion, void *extra)
+{
+    tNodoD *act = *p;
+    while(act != NULL)
+    {
+        accion(act->informacion, extra);
+        act = act->siguiente;
     }
 }
 

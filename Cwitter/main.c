@@ -15,6 +15,9 @@ int main()
     tPila pilaLibres;
     unsigned ultimoId = 0;
 
+    tFeed feed;
+    iniciarFeed(&feed);
+
     lista_crear(&indicesUsuarios);
     crearPila(&pilaLibres);
 
@@ -27,6 +30,7 @@ int main()
     menu_iniciar(&indicesUsuarios, &pilaLibres, &ultimoId);
 #endif
 
+    vaciarLista(&feed.p);
     lista_vaciar(&indicesUsuarios);
     vaciarPila(&pilaLibres);
 

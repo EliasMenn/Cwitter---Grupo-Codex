@@ -62,10 +62,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="publicaciones.h" />
-		<Unit filename="tweets.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="tweets.h" />
 		<Unit filename="usuarios.c">
 			<Option compilerVar="CC" />
 		</Unit>

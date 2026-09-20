@@ -1,6 +1,7 @@
 #include "almacenamiento.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 typedef struct {
     long offsetDat;
@@ -110,7 +111,7 @@ int almacenamiento_guardar_nuevo_usuario(tUsuario *usuario, tIndiceUsuario *indi
 int almacenamiento_leer_usuario_offset(long offset, tUsuario *usuarioDestino)
 {
     FILE *archDat = fopen(ARCHIVO_USUARIOS, "rb");
-    
+
     if(!archDat)
     {
         return 0;
@@ -174,7 +175,7 @@ int almacenamiento_baja_usuario(long offsetDat, long offsetIdx, tPila *pilaLibre
 int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualizado)
 {
     FILE *archDat = fopen(ARCHIVO_USUARIOS, "r+b");
-    
+
     if(!archDat)
     {
         return 0;
@@ -185,4 +186,146 @@ int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualiza
     fclose(archDat);
 
     return 1;
+}
+
+int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion))
+{
+    unsigned i = 0;
+    tPosteo publicacion;
+    FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
+    if(!posteos)
+    {
+        printf("Hubo un error al abrir el archivo\n");
+        return 0;
+    }
+    fseek(posteos,offset,SEEK_SET);
+    while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
+    {
+        Func(listaDoble,&publicacion,sizeof(tPosteo));
+        i++;
+    }
+    fclose(posteos);
+    return i;
+}
+
+int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
+                           int cmp(void* a, void* b), void* parametro)
+{
+    unsigned i = 0;
+    tPosteo publicacion;
+    FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
+    if(!posteos)
+    {
+        printf("Hubo un error al abrir el archivo\n");
+        return 0;
+    }
+    fseek(posteos,offset,SEEK_SET);
+    while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
+    {
+        if(cmp(&publicacion, parametro) == 0)
+        {
+            Func(listaDoble,&publicacion,sizeof(tPosteo));
+            i++;
+        }
+    }
+
+    fclose(posteos);
+    return i;
+}
+
+int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n)
+{
+    FILE* publicacion = fopen(ARCHIVO_POSTEOS, "rb");
+    tPosteo posteo;
+    long pos = inicio;
+    int cargados = 0, ok = 1;
+
+    if(!publicacion)
+        return 0;
+
+    while(ok && cargados < n && pos >= (long)sizeof(tPosteo))
+    {
+        if(fseek(publicacion, pos - (long)sizeof(tPosteo), SEEK_SET) == 0 &&
+           fread(&posteo, sizeof(tPosteo), 1, publicacion) == 1)
+        {
+            pos -= (long)sizeof(tPosteo);
+            agregarAlComienzo(p, &posteo, sizeof(tPosteo));
+            cargados++;
+        }
+        else
+            ok = 0;
+    }
+    fclose(publicacion);
+    return cargados;
+}
+
+int guardarPosteo(tUsuario usuario)
+{
+    tPosteo pub;
+    FILE* posteo = fopen(ARCHIVO_POSTEOS_TEMP,"ab");
+    if(!posteo)
+        return -1;
+    crearPosteo(&pub, usuario);
+    fwrite(&pub,sizeof(tPosteo),1,posteo);
+    fclose(posteo);
+    return 0;
+}
+
+int combinarPosteos()
+{
+    int flag = 0;
+    tLista p;
+    lista_crear(&p);
+    tPosteo publicacion;
+    FILE* posteo_tmp = fopen(ARCHIVO_POSTEOS_TEMP,"rb");
+    if(!posteo_tmp)
+        return -1;
+    FILE* posteo = fopen(ARCHIVO_POSTEOS,"rb");
+    if(!posteo)
+    {
+        if(errno == ENOENT)
+            flag = 1;
+        else
+        {
+            fclose(posteo_tmp);
+            return -1;
+        }
+    }
+    FILE* posteo_nue = fopen(ARCHIVO_POSTEOS_NUE,"wb");
+    if(!posteo_nue)
+    {
+        fclose(posteo_tmp);
+        fclose(posteo);
+        return -1;
+    }
+    FILE* posteo = fopen(ARCHIVO_POSTEOS,"rb");
+    if(!posteo)
+    {
+        fclose(posteo_tmp);
+        return -1;
+    }
+    while(fread(&publicacion, sizeof(tPosteo), 1, posteo_tmp) == 1)
+    {
+        lista_insertar_comienzo(&p,&publicacion,sizeof(tPosteo));
+    }
+    while(lista_vacia(&p) == LISTA_TODO_OK)
+    {
+        lista_sacar_primero(&p,&publicacion,sizeof(tPosteo));
+        fwrite(&publicacion,sizeo(tPosteo),1,posteo_nue);
+    }
+    if(flag == 1)
+    {
+        while(fread(&publicacion, sizeof(tPosteo), 1, posteo) == 1)
+        {
+            fwrite(&publicacion,sizeo(tPosteo),1,posteo_nue);
+        }
+        fclose(posteo);
+    }
+    fclose(posteo_tmp);
+    fclose(poste_nue);
+
+    remove(ARCHIVO_POSTEOS_TEMP);
+    remove(ARCHIVO_POSTEOS);
+    rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
+    return 0;
 }
