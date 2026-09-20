@@ -351,12 +351,13 @@ int combinarPosteos()
 
 int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
 {
-    // Aseguramos que los posteos pendientes se hayan combinado
     combinarPosteos();
 
     FILE *archOrig = fopen(ARCHIVO_POSTEOS, "rb");
     if(!archOrig)
-        return 0; // Archivo inexistente o vacio
+    {
+        return 0;
+    }
 
     FILE *archNue = fopen(ARCHIVO_POSTEOS_NUE, "wb");
     if(!archNue)
@@ -377,13 +378,12 @@ int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
             if(strcmp(pub.nombreUsuario, nombreUsuario) != 0)
             {
                 noAutorizado = 1;
-                fwrite(&pub, sizeof(tPosteo), 1, archNue); // Conservar
+                fwrite(&pub, sizeof(tPosteo), 1, archNue); // Se conserva el tweet en el archivo nuevo
             }
-            // Si coincide autor e ID, se omite de archNue (eliminacion efectiva)
         }
         else
         {
-            fwrite(&pub, sizeof(tPosteo), 1, archNue);
+            fwrite(&pub, sizeof(tPosteo), 1, archNue); // Se conserva el tweet en el archivo nuevo
         }
     }
 
@@ -399,10 +399,10 @@ int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
     if(noAutorizado)
     {
         remove(ARCHIVO_POSTEOS_NUE);
-        return -1; // No pertenece al usuario autenticado
+        return -1; // No pertenece al usuario
     }
 
     remove(ARCHIVO_POSTEOS);
     rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
-    return 1; // Exito
+    return 1;
 }

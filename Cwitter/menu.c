@@ -57,34 +57,34 @@ static void mostrar_error_registro(eUsuarioRet res)
     switch(res)
     {
     case USUARIO_REGISTRO_OK:
-        printf("\n>> Usuario registrado con exito!\n");
+        printf("\nUsuario registrado con exito\n");
         break;
     case USUARIO_VACIO:
-        printf("\n>> Error: El nombre de usuario no puede estar vacio.\n");
+        printf("\nError: El nombre de usuario no puede estar vacio.\n");
         break;
     case USUARIO_DEMASIADO_CORTO:
-        printf("\n>> Error: El nombre de usuario debe tener al menos %d caracteres.\n", MIN_USUARIO);
+        printf("\nError: El nombre de usuario debe tener al menos %d caracteres.\n", MIN_USUARIO);
         break;
     case USUARIO_DEMASIADO_LARGO:
-        printf("\n>> Error: El nombre de usuario supera el limite permitido (%d caracteres).\n", MAX_USUARIO - 1);
+        printf("\nError: El nombre de usuario supera el limite permitido (%d caracteres).\n", MAX_USUARIO - 1);
         break;
     case CONTRASENIA_VACIA:
-        printf("\n>> Error: La contrasenia no puede estar vacia.\n");
+        printf("\nError: La contrasenia no puede estar vacia.\n");
         break;
     case CONTRASENIA_DEMASIADO_CORTA:
-        printf("\n>> Error: La contrasenia debe tener al menos %d caracteres.\n", MIN_CONTRASENIA);
+        printf("\nError: La contrasenia debe tener al menos %d caracteres.\n", MIN_CONTRASENIA);
         break;
     case CONTRASENIA_DEMASIADO_LARGA:
-        printf("\n>> Error: La contrasenia supera el limite permitido (%d caracteres).\n", MAX_CONTRASENIA - 1);
+        printf("\nError: La contrasenia supera el limite permitido (%d caracteres).\n", MAX_CONTRASENIA - 1);
         break;
     case USUARIO_DUPLICADO:
-        printf("\n>> Error: Ya existe un usuario registrado con ese nombre.\n");
+        printf("\nError: Ya existe un usuario registrado con ese nombre.\n");
         break;
     case USUARIO_SIN_MEMORIA:
-        printf("\n>> Error: No hay memoria suficiente en el sistema.\n");
+        printf("\nError: No hay memoria suficiente en el sistema.\n");
         break;
     default:
-        printf("\n>> Error: Datos invalidos recibidos.\n");
+        printf("\nError: Datos invalidos recibidos.\n");
         break;
     }
 }
@@ -94,16 +94,16 @@ static void mostrar_error_login(eLoginRet res)
     switch(res)
     {
     case LOGIN_OK:
-        printf("\n>> Inicio de sesion correcto.\n");
+        printf("\n Inicio de sesion correcto.\n");
         break;
     case LOGIN_CREDENCIALES_INCORRECTAS:
-        printf("\n>> Error: Usuario o contrasenia incorrectos (o cuenta dada de baja).\n");
+        printf("\nError: Usuario o contrasenia incorrectos (o cuenta dada de baja).\n");
         break;
     case LOGIN_USUARIO_NO_ENCONTRADO:
-        printf("\n>> Error: El usuario ingresado no existe.\n");
+        printf("\nError: El usuario ingresado no existe.\n");
         break;
     default:
-        printf("\n>> Error: Datos de inicio de sesion invalidos.\n");
+        printf("\nError: Datos de inicio de sesion invalidos.\n");
         break;
     }
 }
@@ -136,7 +136,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
         {
             limpiar_buffer();
             opcion = -1;
-            printf("\n>> Opcion invalida. Intente de nuevo.\n");
+            printf("\nOpcion invalida. Intente de nuevo.\n");
             pausar();
             continue;
         }
@@ -157,7 +157,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
 
             if(feed.p == NULL)
             {
-                printf(">> No hay publicaciones en el feed todavia.\n\n");
+                printf("No hay publicaciones en el feed todavia.\n\n");
                 pausar();
             }
             else
@@ -210,11 +210,11 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             if(guardarPosteo(*usuarioLogueado) == 0)
             {
                 combinarPosteos();
-                printf("\n>> Publicacion guardada exitosamente.\n");
+                printf("\nPublicacion guardada exitosamente.\n");
             }
             else
             {
-                printf("\n>> Error al guardar la publicacion.\n");
+                printf("\nError al guardar la publicacion.\n");
             }
             pausar();
             break;
@@ -235,7 +235,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
 
             if(strlen(termino) == 0)
             {
-                printf("\n>> Busqueda cancelada (termino vacio).\n");
+                printf("\nBusqueda cancelada (termino vacio).\n");
                 pausar();
                 break;
             }
@@ -246,7 +246,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
 
             if(feedFiltro.p == NULL)
             {
-                printf("\n>> No se encontraron publicaciones con '%s'.\n\n", termino);
+                printf("\nNo se encontraron publicaciones con '%s'.\n\n", termino);
                 pausar();
             }
             else
@@ -309,36 +309,36 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             if(scanf("%u", &idABorrar) != 1)
             {
                 limpiar_buffer();
-                printf("\n>> ID invalido.\n");
+                printf("\nID invalido.\n");
                 pausar();
                 break;
             }
             limpiar_buffer();
 
-            leer_cadena("¿Confirma la eliminacion del tweet? (S/N): ", confirmacionBorrado, sizeof(confirmacionBorrado));
+            leer_cadena("¿Continuar con la eliminacion del tweet? (S/N): ", confirmacionBorrado, sizeof(confirmacionBorrado));
             if(confirmacionBorrado[0] == 'S' || confirmacionBorrado[0] == 's')
             {
                 int resElim = almacenamiento_eliminar_posteo(idABorrar, usuarioLogueado->usuario);
                 if(resElim == 1)
                 {
-                    printf("\n>> Tweet #%u eliminado exitosamente.\n", idABorrar);
+                    printf("\nTweet #%u eliminado exitosamente.\n", idABorrar);
                 }
                 else if(resElim == -1)
                 {
-                    printf("\n>> Error: No tiene permisos para eliminar este tweet (pertenece a otro usuario).\n");
+                    printf("\nError: No tiene permisos para eliminar este tweet.\n");
                 }
                 else if(resElim == 0)
                 {
-                    printf("\n>> Error: No se encontro ningun tweet con el ID #%u.\n", idABorrar);
+                    printf("\nError: No se encontro ningun tweet con el ID #%u.\n", idABorrar);
                 }
                 else
                 {
-                    printf("\n>> Error de almacenamiento al procesar la eliminacion.\n");
+                    printf("\nError al procesar la eliminacion.\n");
                 }
             }
             else
             {
-                printf("\n>> Operacion de eliminacion cancelada.\n");
+                printf("\nOperacion de eliminacion cancelada.\n");
             }
             pausar();
             break;
@@ -353,18 +353,18 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
 
             if(strlen(nuevaClave) < MIN_CONTRASENIA)
             {
-                printf("\n>> Error: La nueva contrasenia debe tener al menos %d caracteres.\n", MIN_CONTRASENIA);
+                printf("\nError: La nueva contrasenia debe tener al menos %d caracteres.\n", MIN_CONTRASENIA);
             }
             else
             {
                 if(usuario_modificar_contrasenia(indicesUsuarios, usuarioLogueado->usuario, nuevaClave))
                 {
                     strcpy(usuarioLogueado->contrasenia, nuevaClave);
-                    printf("\n>> Contrasenia modificada exitosamente en disco.\n");
+                    printf("\nContrasenia modificada exitosamente.\n");
                 }
                 else
                 {
-                    printf("\n>> Error al actualizar la contrasenia en almacenamiento.\n");
+                    printf("\nError al actualizar la contrasenia.\n");
                 }
             }
             pausar();
@@ -381,31 +381,31 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             {
                 if(usuario_dar_baja(indicesUsuarios, pilaLibres, usuarioLogueado->usuario))
                 {
-                    printf("\n>> Su cuenta ha sido dada de baja exitosamente.\n");
-                    printf(">> Cerrando sesion automatica...\n");
+                    printf("\nSu cuenta ha sido dada de baja exitosamente.\n");
+                    printf("Cerrando sesion...\n");
                     pausar();
                     return; // Retornar al menu principal
                 }
                 else
                 {
-                    printf("\n>> Error al procesar la baja de usuario.\n");
+                    printf("\nError al procesar la baja de usuario.\n");
                     pausar();
                 }
             }
             else
             {
-                printf("\n>> Operacion de baja cancelada.\n");
+                printf("\nOperacion de baja cancelada.\n");
                 pausar();
             }
             break;
 
         case 0:
-            printf("\n>> Cerrando sesion de @%s...\n", usuarioLogueado->usuario);
+            printf("\nCerrando sesion de @%s...\n", usuarioLogueado->usuario);
             pausar();
             break;
 
         default:
-            printf("\n>> Opcion no valida.\n");
+            printf("\nOpcion invalida.\n");
             pausar();
             break;
         }
@@ -438,7 +438,7 @@ void menu_iniciar(tLista *indicesUsuarios, tPila *pilaLibres, unsigned *ultimoId
         {
             limpiar_buffer();
             opcion = -1;
-            printf("\n>> Opcion invalida. Intente de nuevo.\n");
+            printf("\nOpcion invalida. Intente de nuevo.\n");
             pausar();
             continue;
         }
@@ -486,7 +486,7 @@ void menu_iniciar(tLista *indicesUsuarios, tPila *pilaLibres, unsigned *ultimoId
             break;
 
         default:
-            printf("\n>> Opcion no valida.\n");
+            printf("\nOpcion invalida.\n");
             pausar();
             break;
         }
