@@ -2,7 +2,7 @@
 
 void mostrarPosteo(tPosteo pub)
 {
-    printf("%s%s\n\t", pub.nombreUsuario, pub.publicacion);
+    printf("%s\n\t%s\n", pub.nombreUsuario, pub.publicacion);
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
@@ -82,7 +82,7 @@ int cmpTexto(void* a, void* b)
 void iniciarFeed(tFeed* feed)
 {
     crearListaD(feed->p);
-    feed->posteo_actual = 1;
+    feed->posteo_actual = 0;
     FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
     if(posteos)
     {
@@ -118,7 +118,7 @@ void siguientePosteo(tFeed* feed)
         }
     }
 
-    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual++;
