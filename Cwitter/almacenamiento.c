@@ -221,7 +221,7 @@ int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned ca
     fseek(posteos,offset,SEEK_SET);
     while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
     {
-        if(cmp(posteos, parametro) == 0)
+        if(cmp(&publicacion, parametro) == 0)
         {
             Func(listaDoble,&publicacion,sizeof(tPosteo));
             i++;
@@ -261,11 +261,32 @@ int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n)
 int guardarPosteo(tUsuario usuario)
 {
     tPosteo pub;
-    FILE* posteo = fopen(ARCHIVO_POSTEOS,"ab");
+    FILE* posteo = fopen(ARCHIVO_POSTEOS_TEMP,"ab");
     if(!posteo)
         return -1;
     crearPosteo(&pub, usuario);
     fwrite(&pub,sizeof(tPosteo),1,posteo);
     fclose(posteo);
     return 0;
+}
+
+int combinarPosteos()
+{
+    FILE* posteo_tmp = fopen(ARCHIVO_POSTEOS_TEMP,"rb");
+    if(!posteo_tmp)
+        return -1;
+    FILE* posteo = fopen(ARCHIVO_POSTEOS,"rb");
+    if(!posteo)
+    {
+        fclose(posteo_tmp);
+        return -1;
+    }
+    FILE* posteo_nue = fopen(ARCHIVO_POSTEOS_NUE,"wb");
+    if(!posteo_nue)
+    {
+        fclose(poste_tmp);
+        fclose(posteo);
+        return -1;
+    }
+
 }

@@ -155,8 +155,7 @@ int main()
 
     guardarPosteo(usuarioLogueado);
 
-    cargarNPosteos(&feed.p,0,MAX_PUBLICACIONES,agregarAlComienzo);
-
+    siguientePosteo(&feed);
     siguientePosteo(&feed);
 
     printf("\nIndices de usuarios tras registrar al nuevo:\n");
@@ -164,6 +163,7 @@ int main()
 
     printf("\nUltimo ID utilizado total: %u\n", ultimoId);
 
+    vaciarLista(&feed.p);
     lista_vaciar(&indicesUsuarios);
     vaciarPila(&pilaLibres);
 

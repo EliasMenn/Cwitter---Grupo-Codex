@@ -2,7 +2,7 @@
 
 void crearListaD(tListaDoble* p)
 {
-    p = NULL;
+    *p = NULL;
 }
 
 int agregarAlFinal(tListaDoble* p, void* informacion, size_t tam_informacion)
@@ -144,24 +144,14 @@ int obtenerPosicionN(tListaDoble* p, void* informacion, size_t tam_informacion, 
 
 void vaciarLista(tListaDoble *p)
 {
-    tNodoD* act = *p;
     tNodoD* elim;
 
-    if(!act)
-        return;
     while(*p != NULL)
     {
-        elim = act;
-
-        if(act->siguiente != NULL)
-        {
-            *p = elim->siguiente;
+        elim = *p;
+        *p = elim->siguiente;
+        if(*p != NULL)
             (*p)->anterior = NULL;
-        }
-        else
-        {
-            *p = NULL;
-        }
 
         free(elim->informacion);
         free(elim);

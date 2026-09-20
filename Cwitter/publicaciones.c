@@ -81,20 +81,11 @@ int cmpTexto(void* a, void* b)
 
 void iniciarFeed(tFeed* feed)
 {
-    crearListaD(feed->p);
+    crearListaD(&feed->p);
     feed->posteo_actual = 0;
-    FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
-    if(posteos)
-    {
-        feed->offset = 0;
-    }
-    else
-    {
-        feed->offset = cargarNPosteos(feed->p, 0,
-                       MAX_PUBLICACIONES, agregarAlFinal)*sizeof(tPosteo);
-    }
-
     feed->inicio = 0;
+    feed->offset = (long)cargarNPosteos(&feed->p, 0,
+                   MAX_PUBLICACIONES, agregarAlFinal) * (long)sizeof(tPosteo);
 }
 
 void siguientePosteo(tFeed* feed)
@@ -104,13 +95,13 @@ void siguientePosteo(tFeed* feed)
 
     if(feed->posteo_actual == MAX_PUBLICACIONES)
     {
-        cargados = cargarNPosteos(feed->p, feed->offset,
+        cargados = cargarNPosteos(&feed->p, feed->offset,
                                   CAMBIO_PUBLICACIONES, agregarAlFinal);
 
         if(cargados > 0)
         {
             for(i = 0; i < cargados; i++)
-                quitarDelComienzo(feed->p, &posteo, sizeof(tPosteo));
+                quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
 
             feed->posteo_actual -= cargados;
             feed->offset += cargados * sizeof(tPosteo);
@@ -132,13 +123,13 @@ void posteoAnterior(tFeed* feed)
 
     if(feed->posteo_actual == 0)
     {
-        cargados = cargarNPosteosAtras(feed->p, feed->inicio,
+        cargados = cargarNPosteosAtras(&feed->p, feed->inicio,
                                         CAMBIO_PUBLICACIONES);
 
         if(cargados > 0)
         {
             for(i = 0; i < cargados; i++)
-                quitarDelFinal(feed->p, &posteo, sizeof(tPosteo));
+                quitarDelFinal(&feed->p, &posteo, sizeof(tPosteo));
 
             feed->posteo_actual += cargados;
             feed->offset -= cargados * sizeof(tPosteo);
@@ -146,7 +137,7 @@ void posteoAnterior(tFeed* feed)
         }
     }
 
-    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual--;
@@ -155,9 +146,9 @@ void posteoAnterior(tFeed* feed)
 
 void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroFiltro)
 {
-    crearListaD(feed->p);
+    crearListaD(&feed->p);
     feed->posteo_actual = -1;
-    feed->offset = cargarNPosteosFiltrado(feed->p, 0,
+    feed->offset = cargarNPosteosFiltrado(&feed->p, 0,
                    MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro)*sizeof(tPosteo);
     feed->inicio = 0;
 }
@@ -166,7 +157,7 @@ void siguientePosteoFiltrados(tFeed* feed)
 {
     tPosteo posteo;
 
-    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual++;
@@ -177,7 +168,7 @@ void posteoAnteriorFiltrado(tFeed* feed)
 {
     tPosteo posteo;
 
-    if(obtenerPosicionN(feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual--;

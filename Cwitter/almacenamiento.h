@@ -9,7 +9,8 @@
 #define ARCHIVO_USUARIOS "datos/usuarios.dat"
 #define ARCHIVO_INDICES_USUARIOS "datos/indice_usuarios.idx"
 #define ARCHIVO_POSTEOS "datos/posteos.dat"
-
+#define ARCHIVO_POSTEOS_TEMP "datos/posteos_temp.dat"
+#define ARCHIVO_POSTEOS_NUE "datos/posteos_nue.dat"
 int almacenamiento_cargar_indices(tLista *listaIndices, tPila *pilaLibres, unsigned *ultimoId);
 int almacenamiento_guardar_nuevo_usuario(tUsuario *usuario, tIndiceUsuario *indiceACompletar, tPila *pilaLibres);
 int almacenamiento_leer_usuario_offset(long offset, tUsuario *usuarioDestino);

@@ -9,10 +9,10 @@
 #include "usuarios.h"
 #include "almacenamiento.h"
 typedef struct{
-   tListaDoble *p;
-   unsigned posteo_actual;
-   unsigned offset;
-   unsigned inicio;
+   tListaDoble p;
+   int posteo_actual;
+   long offset;
+   long inicio;
 }tFeed;
 
 typedef struct{
