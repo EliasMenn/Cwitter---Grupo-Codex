@@ -126,9 +126,10 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
         printf("|  1. Ver Feed de publicaciones          |\n");
         printf("|  2. Nueva publicacion                  |\n");
         printf("|  3. Buscar publicaciones               |\n");
-        printf("|  4. Eliminar una publicacion           |\n");
-        printf("|  5. Modificar contrasenia              |\n");
-        printf("|  6. Dar de baja mi cuenta              |\n");
+        printf("|  4. Editar una publicacion             |\n");
+        printf("|  5. Eliminar una publicacion           |\n");
+        printf("|  6. Modificar contrasenia              |\n");
+        printf("|  7. Dar de baja mi cuenta              |\n");
         printf("|  0. Cerrar sesion                      |\n");
         printf("+========================================+\n");
         printf("Opcion: ");
@@ -296,54 +297,342 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
 
         case 4:
         {
-            unsigned idABorrar = 0;
-            char confirmacionBorrado[10];
+            tFeed feedFiltro;
+            tPosteo patronFiltro;
+            char termino[LARGO_MAX];
+            char tecla;
+            char temp[LARGO_MAX];
+            int i;
+
+            limpiar_pantalla();
+            printf("+========================================+\n");
+            printf("|       << EDITAR UNA PUBLICACION >>     |\n");
+            printf("+========================================+\n\n");
+            printf("Ingrese una palabra clave o parte del tweet a editar:\n> ");
+            leer_cadena("", termino, sizeof(termino));
+
+            if(strlen(termino) == 0)
+            {
+                printf("\nBusqueda cancelada (termino vacio).\n");
+                pausar();
+                break;
+            }
+
+            for(i = 0; termino[i] != '\0'; i++)
+            {
+                if(termino[i] >= 'A' && termino[i] <= 'Z')
+                {
+                    termino[i] = termino[i] + 32;
+                }
+            }
+
+            if(strchr(termino, '*') == NULL)
+            {
+                snprintf(temp, sizeof(temp), "*%s*", termino);
+                strcpy(patronFiltro.publicacion, temp);
+            }
+            else
+            {
+                strcpy(patronFiltro.publicacion, termino);
+            }
+
+            strcpy(patronFiltro.nombreUsuario, usuarioLogueado->usuario);
+            cargarPostsFiltrados(&feedFiltro, cmpTexto, &patronFiltro);
+
+            if(feedFiltro.p == NULL)
+            {
+                printf("\nNo se encontraron publicaciones tuyas con '%s'.\n\n", termino);
+                pausar();
+            }
+            else
+            {
+                limpiar_pantalla();
+                printf("+========================================+\n");
+                printf("|     << RESULTADOS DE LA BUSQUEDA >>    |\n");
+                printf("+========================================+\n");
+                printf("Filtro: \"%s\"\n\n", termino);
+                feedFiltro.posteo_actual = 0;
+                siguientePosteoFiltrados(&feedFiltro);
+
+                do
+                {
+                    printf("\n------------------------------------------\n");
+                    printf("[S] Siguiente | [A] Anterior | [E] Proceder a Editar | [0] Volver\nOpcion: ");
+                    if(scanf(" %c", &tecla) != 1)
+                    {
+                        limpiar_buffer();
+                        break;
+                    }
+                    limpiar_buffer();
+
+                    if(tecla == 'S' || tecla == 's')
+                    {
+                        limpiar_pantalla();
+                        printf("+========================================+\n");
+                        printf("|     << RESULTADOS DE LA BUSQUEDA >>    |\n");
+                        printf("+========================================+\n");
+                        printf("Filtro: \"%s\"\n\n", termino);
+                        siguientePosteoFiltrados(&feedFiltro);
+                    }
+                    else if(tecla == 'A' || tecla == 'a')
+                    {
+                        limpiar_pantalla();
+                        printf("+========================================+\n");
+                        printf("|     << RESULTADOS DE LA BUSQUEDA >>    |\n");
+                        printf("+========================================+\n");
+                        printf("Filtro: \"%s\"\n\n", termino);
+                        posteoAnteriorFiltrado(&feedFiltro);
+                    }
+                    else if(tecla == 'E' || tecla == 'e')
+                    {
+                        unsigned idAEditar;
+                        char nuevoTexto[LARGO_MAX];
+                        char confirmacionEdicion[10];
+                        tPosteo posteoActual;
+                        int tienePosteoActual;
+                        int resEdicion;
+
+                        idAEditar = 0;
+                        tienePosteoActual = 0;
+
+                        if(feedFiltro.posteo_actual > 0)
+                        {
+                            tienePosteoActual = (obtenerPosicionN(&feedFiltro.p, &posteoActual, sizeof(tPosteo), feedFiltro.posteo_actual - 1) == 0);
+                        }
+
+                        vaciarLista(&feedFiltro.p);
+
+                        limpiar_pantalla();
+                        printf("+========================================+\n");
+                        printf("|       << EDITAR UNA PUBLICACION >>     |\n");
+                        printf("+========================================+\n\n");
+
+                        if(tienePosteoActual)
+                        {
+                            printf("Tweet seleccionado para editar:\n");
+                            mostrarPosteo(posteoActual);
+                            printf("\n----------------------------------------\n\n");
+                        }
+
+                        printf("Ingrese el ID del tweet a editar: ");
+
+                        if(scanf("%u", &idAEditar) != 1)
+                        {
+                            limpiar_buffer();
+                            printf("\nID invalido.\n");
+                            pausar();
+                            break;
+                        }
+                        limpiar_buffer();
+
+                        leer_cadena("Ingrese el nuevo texto del tweet (Max 140 caracteres):\n> ", nuevoTexto, sizeof(nuevoTexto));
+
+                        if(strlen(nuevoTexto) == 0)
+                        {
+                            printf("\nError: El texto no puede estar vacio.\n");
+                            pausar();
+                            break;
+                        }
+
+                        leer_cadena("¿Confirmar edicion del tweet? (S/N): ", confirmacionEdicion, sizeof(confirmacionEdicion));
+                        if(confirmacionEdicion[0] == 'S' || confirmacionEdicion[0] == 's')
+                        {
+                            resEdicion = almacenamiento_editar_posteo(idAEditar, usuarioLogueado->usuario, nuevoTexto);
+                            if(resEdicion == 1)
+                            {
+                                printf("\nTweet #%u editado exitosamente.\n", idAEditar);
+                            }
+                            else if(resEdicion == -1)
+                            {
+                                printf("\nError: No tiene permisos para editar este tweet.\n");
+                            }
+                            else if(resEdicion == 0)
+                            {
+                                printf("\nError: No se encontro ningun tweet tuyo con el ID #%u.\n", idAEditar);
+                            }
+                            else
+                            {
+                                printf("\nError al procesar la edicion.\n");
+                            }
+                        }
+                        else
+                        {
+                            printf("\nOperacion de edicion cancelada.\n");
+                        }
+                        pausar();
+                        break;
+                    }
+                } while(tecla != '0');
+
+                vaciarLista(&feedFiltro.p);
+            }
+            break;
+        }
+
+        case 5:
+        {
+            tFeed feedFiltro;
+            tPosteo patronFiltro;
+            char termino[LARGO_MAX];
+            char tecla;
+            char temp[LARGO_MAX];
+            int i;
 
             limpiar_pantalla();
             printf("+========================================+\n");
             printf("|      << ELIMINAR UNA PUBLICACION >>    |\n");
             printf("+========================================+\n\n");
-            printf("Ingrese el ID del tweet a eliminar: ");
+            printf("Ingrese una palabra clave o parte del tweet:\n> ");
+            leer_cadena("", termino, sizeof(termino));
 
-            if(scanf("%u", &idABorrar) != 1)
+            if(strlen(termino) == 0)
             {
-                limpiar_buffer();
-                printf("\nID invalido.\n");
+                printf("\nBusqueda cancelada (termino vacio).\n");
                 pausar();
                 break;
             }
-            limpiar_buffer();
 
-            leer_cadena("¿Continuar con la eliminacion del tweet? (S/N): ", confirmacionBorrado, sizeof(confirmacionBorrado));
-            if(confirmacionBorrado[0] == 'S' || confirmacionBorrado[0] == 's')
+            for(i = 0; termino[i] != '\0'; i++)
             {
-                int resElim = almacenamiento_eliminar_posteo(idABorrar, usuarioLogueado->usuario);
-                if(resElim == 1)
+                if(termino[i] >= 'A' && termino[i] <= 'Z')
                 {
-                    printf("\nTweet #%u eliminado exitosamente.\n", idABorrar);
+                    termino[i] = termino[i] + 32;
                 }
-                else if(resElim == -1)
-                {
-                    printf("\nError: No tiene permisos para eliminar este tweet.\n");
-                }
-                else if(resElim == 0)
-                {
-                    printf("\nError: No se encontro ningun tweet con el ID #%u.\n", idABorrar);
-                }
-                else
-                {
-                    printf("\nError al procesar la eliminacion.\n");
-                }
+            }
+
+            if(strchr(termino, '*') == NULL)
+            {
+                snprintf(temp, sizeof(temp), "*%s*", termino);
+                strcpy(patronFiltro.publicacion, temp);
             }
             else
             {
-                printf("\nOperacion de eliminacion cancelada.\n");
+                strcpy(patronFiltro.publicacion, termino);
             }
-            pausar();
+
+            cargarPostsFiltrados(&feedFiltro, cmpTexto, &patronFiltro);
+
+            if(feedFiltro.p == NULL)
+            {
+                printf("\nNo se encontraron publicaciones con '%s'.\n\n", termino);
+                pausar();
+            }
+            else
+            {
+                limpiar_pantalla();
+                printf("+========================================+\n");
+                printf("|     << RESULTADOS DE LA BUSQUEDA >>    |\n");
+                printf("+========================================+\n");
+                printf("Filtro: \"%s\"\n\n", termino);
+                feedFiltro.posteo_actual = 0;
+                siguientePosteoFiltrados(&feedFiltro);
+
+                do
+                {
+                    printf("\n------------------------------------------\n");
+                    printf("[S] Siguiente | [A] Anterior | [D] Proceder a Eliminar | [0] Volver\nOpcion: ");
+                    if(scanf(" %c", &tecla) != 1)
+                    {
+                        limpiar_buffer();
+                        break;
+                    }
+                    limpiar_buffer();
+
+                    if(tecla == 'S' || tecla == 's')
+                    {
+                        limpiar_pantalla();
+                        printf("+========================================+\n");
+                        printf("|     << RESULTADOS DE LA BUSQUEDA >>    |\n");
+                        printf("+========================================+\n");
+                        printf("Filtro: \"%s\"\n\n", termino);
+                        siguientePosteoFiltrados(&feedFiltro);
+                    }
+                    else if(tecla == 'A' || tecla == 'a')
+                    {
+                        limpiar_pantalla();
+                        printf("+========================================+\n");
+                        printf("|     << RESULTADOS DE LA BUSQUEDA >>    |\n");
+                        printf("+========================================+\n");
+                        printf("Filtro: \"%s\"\n\n", termino);
+                        posteoAnteriorFiltrado(&feedFiltro);
+                    }
+                    else if(tecla == 'D' || tecla == 'd')
+                    {
+                        unsigned idABorrar;
+                        char confirmacionBorrado[10];
+                        tPosteo posteoActual;
+                        int tienePosteoActual;
+                        int resElim;
+
+                        idABorrar = 0;
+                        tienePosteoActual = 0;
+
+                        if(feedFiltro.posteo_actual > 0)
+                        {
+                            tienePosteoActual = (obtenerPosicionN(&feedFiltro.p, &posteoActual, sizeof(tPosteo), feedFiltro.posteo_actual - 1) == 0);
+                        }
+
+                        vaciarLista(&feedFiltro.p);
+
+                        limpiar_pantalla();
+                        printf("+========================================+\n");
+                        printf("|      << ELIMINAR UNA PUBLICACION >>    |\n");
+                        printf("+========================================+\n\n");
+
+                        if(tienePosteoActual)
+                        {
+                            printf("Tweet seleccionado para revisar:\n");
+                            mostrarPosteo(posteoActual);
+                            printf("\n----------------------------------------\n\n");
+                        }
+
+                        printf("Ingrese el ID del tweet a eliminar: ");
+
+                        if(scanf("%u", &idABorrar) != 1)
+                        {
+                            limpiar_buffer();
+                            printf("\nID invalido.\n");
+                            pausar();
+                            break;
+                        }
+                        limpiar_buffer();
+
+                        leer_cadena("¿Continuar con la eliminacion del tweet? (S/N): ", confirmacionBorrado, sizeof(confirmacionBorrado));
+                        if(confirmacionBorrado[0] == 'S' || confirmacionBorrado[0] == 's')
+                        {
+                            resElim = almacenamiento_eliminar_posteo(idABorrar, usuarioLogueado->usuario);
+                            if(resElim == 1)
+                            {
+                                printf("\nTweet #%u eliminado exitosamente.\n", idABorrar);
+                            }
+                            else if(resElim == -1)
+                            {
+                                printf("\nError: No tiene permisos para eliminar este tweet.\n");
+                            }
+                            else if(resElim == 0)
+                            {
+                                printf("\nError: No se encontro ningun tweet con el ID #%u.\n", idABorrar);
+                            }
+                            else
+                            {
+                                printf("\nError al procesar la eliminacion.\n");
+                            }
+                        }
+                        else
+                        {
+                            printf("\nOperacion de eliminacion cancelada.\n");
+                        }
+                        pausar();
+                        break;
+                    }
+                } while(tecla != '0');
+
+                vaciarLista(&feedFiltro.p);
+            }
             break;
         }
 
-        case 5:
+        case 6:
             limpiar_pantalla();
             printf("+========================================+\n");
             printf("|        << MODIFICAR CONTRASENIA >>     |\n");
@@ -369,7 +658,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             pausar();
             break;
 
-        case 6:
+        case 7:
             limpiar_pantalla();
             printf("+========================================+\n");
             printf("|          << DAR DE BAJA CUENTA >>      |\n");

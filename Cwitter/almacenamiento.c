@@ -406,3 +406,71 @@ int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
     rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
     return 1;
 }
+
+int almacenamiento_editar_posteo(unsigned idPosteo, const char *nombreUsuario, const char *nuevoTexto)
+{
+    FILE *archOrig;
+    FILE *archNue;
+    tPosteo pub;
+    int encontrado;
+    int noAutorizado;
+
+    combinarPosteos();
+
+    archOrig = fopen(ARCHIVO_POSTEOS, "rb");
+    if(!archOrig)
+    {
+        return 0;
+    }
+
+    archNue = fopen(ARCHIVO_POSTEOS_NUE, "wb");
+    if(!archNue)
+    {
+        fclose(archOrig);
+        return -2;
+    }
+
+    encontrado = 0;
+    noAutorizado = 0;
+
+    while(fread(&pub, sizeof(tPosteo), 1, archOrig) == 1)
+    {
+        if(pub.id == idPosteo)
+        {
+            encontrado = 1;
+            if(strcmp(pub.nombreUsuario, nombreUsuario) != 0)
+            {
+                noAutorizado = 1;
+                fwrite(&pub, sizeof(tPosteo), 1, archNue);
+            }
+            else
+            {
+                strcpy(pub.publicacion, nuevoTexto);
+                fwrite(&pub, sizeof(tPosteo), 1, archNue);
+            }
+        }
+        else
+        {
+            fwrite(&pub, sizeof(tPosteo), 1, archNue);
+        }
+    }
+
+    fclose(archOrig);
+    fclose(archNue);
+
+    if(!encontrado)
+    {
+        remove(ARCHIVO_POSTEOS_NUE);
+        return 0;
+    }
+
+    if(noAutorizado)
+    {
+        remove(ARCHIVO_POSTEOS_NUE);
+        return -1;
+    }
+
+    remove(ARCHIVO_POSTEOS);
+    rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
+    return 1;
+}
