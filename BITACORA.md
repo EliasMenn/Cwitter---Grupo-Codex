@@ -67,8 +67,8 @@ Estructura en memoria representada como una lista doblemente enlazada de posteos
   2. *Vector dinámico en memoria*: Moverse es eficiente, pero la eliminación de un tweet intermedio requiere desplazar todos los elementos posteriores en memoria. Esto implicaría una gran cantidad de copias en memoria, lo cual es ineficiente.
   3. *Lista doblemente enlazada*: Enlaces `sig` y `ant` por nodo.
 * **Decisión y justificación**: Se eligió la **Lista Doblemente Enlazada (`tListaDoble`)**. Permite navegación en ambos sentidos, y ante la eliminación de cualquier posteo (primer tweet, último o uno intermedio), la desvinculación y liberación del nodo se realiza reajustando punteros sin mover informacion en memoria. Los posteos se presentan en orden cronológico inverso (el más reciente primero), replicando el comportamiento estándar de redes sociales.
-* **Metodo de implementacion: Debido a que no sabemos la cantidad real de publicaciones no podemos optar por cargar el archivo entero y realizar una carga cada vez que el usuario quiera ver un tweet nuevo es un desproposito. por eso optamos por una implementacion de "visor" donde cargamos una cantidad razonable de posteos (digamos 100), al llegar al ultimo de estos posteos, quitamos de memoria los 10 (para dar un numero) primeros y agregamos la misma cantidad al final. 
-    Si el usuario volviera hasta el comienzo (y no estemos al comienzo de archivo) quitamos la cantidad de registros que hayamos definido del final de nuestra lista y la agregariamos al comienzo.
+* **Metodo de implementacion**: Debido a que no sabemos la cantidad real de publicaciones no podemos optar por cargar el archivo entero y realizar una carga cada vez que el usuario quiera ver un tweet nuevo es un desproposito. por eso optamos por una implementacion de `visor` donde cargamos una cantidad M, al llegar al ultimo de estos posteos, quitamos de memoria los N primeros y agregamos la misma cantidad al final. 
+Si el usuario volviera hasta el comienzo (y no estemos al comienzo de archivo) quitamos los N ultimos registros del final de nuestra lista y agregamos la misma cantidad al comienzo.
 ---
 
 ## 3. Formato y Estrategia de Persistencia
