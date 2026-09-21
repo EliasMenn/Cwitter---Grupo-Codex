@@ -92,64 +92,90 @@ void siguientePosteo(tFeed* feed)
 {
     tPosteo posteo;
     int i, cargados;
+    int ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
 
-    if(feed->posteo_actual == MAX_PUBLICACIONES)
+    if (ok != 0)
     {
         cargados = cargarNPosteos(&feed->p, feed->offset,
                                   CAMBIO_PUBLICACIONES, agregarAlFinal);
 
-        if(cargados > 0)
+        if (cargados > 0)
         {
-            for(i = 0; i < cargados; i++)
+            for (i = 0; i < cargados; i++)
                 quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
 
             feed->posteo_actual -= cargados;
-            feed->offset += cargados * sizeof(tPosteo);
-            feed->inicio += cargados * sizeof(tPosteo);
+            feed->offset += (long)cargados * (long)sizeof(tPosteo);
+            feed->inicio += (long)cargados * (long)sizeof(tPosteo);
+
+            ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
         }
     }
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if (ok == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual++;
+    }
+    else
+    {
+        // Reached end of feed: register bottom boundary state once
+        if (feed->posteo_actual > 0 &&
+            obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual - 1) == 0)
+        {
+            feed->posteo_actual++;
+        }
     }
 }
 
 void posteoAnterior(tFeed* feed)
 {
     tPosteo posteo;
-    int i, cargados;
+    int i, cargados, objetivo;
 
-    if(feed->posteo_actual == 0)
+    if (feed->posteo_actual < 1)
     {
-        cargados = cargarNPosteosAtras(&feed->p, feed->inicio,
-                                        CAMBIO_PUBLICACIONES);
+        feed->posteo_actual = 0; // Cap at top boundary
+        return;
+    }
 
-        if(cargados > 0)
+    objetivo = feed->posteo_actual - 2;
+
+    if (objetivo < 0)
+    {
+        cargados = cargarNPosteosAtras(&feed->p, feed->inicio, CAMBIO_PUBLICACIONES);
+
+        if (cargados > 0)
         {
-            for(i = 0; i < cargados; i++)
+            for (i = 0; i < cargados; i++)
                 quitarDelFinal(&feed->p, &posteo, sizeof(tPosteo));
 
             feed->posteo_actual += cargados;
-            feed->offset -= cargados * sizeof(tPosteo);
-            feed->inicio -= cargados * sizeof(tPosteo);
+            feed->offset -= (long)cargados * (long)sizeof(tPosteo);
+            feed->inicio -= (long)cargados * (long)sizeof(tPosteo);
+
+            objetivo = feed->posteo_actual - 2;
         }
     }
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    // Pass 'objetivo' directly instead of 'objetivo - 1'
+    if (objetivo >= 0 && obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), objetivo) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual--;
+    }
+    else if (objetivo < 0)
+    {
+        feed->posteo_actual = 0; // Cap at top boundary if no posts loaded
     }
 }
 
 void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroFiltro)
 {
     crearListaD(&feed->p);
-    feed->posteo_actual = -1;
+    feed->posteo_actual = 0;
     feed->offset = cargarNPosteosFiltrado(&feed->p, 0,
-                   MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro)*sizeof(tPosteo);
+                   MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro) * sizeof(tPosteo);
     feed->inicio = 0;
 }
 
@@ -157,21 +183,40 @@ void siguientePosteoFiltrados(tFeed* feed)
 {
     tPosteo posteo;
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if (obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual++;
+    }
+    else
+    {
+
+        if (feed->posteo_actual > 0 &&
+            obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual - 1) == 0)
+        {
+            feed->posteo_actual++;
+        }
     }
 }
 
 void posteoAnteriorFiltrado(tFeed* feed)
 {
     tPosteo posteo;
+    int objetivo = feed->posteo_actual - 2;
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if (objetivo < 0)
+    {
+        feed->posteo_actual = 0;
+        return;
+    }
+
+    if (obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), objetivo) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual--;
     }
 }
-// POR TEMAS DE PERFORMANCE/ DIFICULTAD NO SE TOMA EN CUENTA MAS DE 100 MENSAJES FILTRADOS, ES DECIR, SIEMPRE SE TOMARAN EN CUENTA LOS ULTIMOS 100 QUE COINCIDAN CON EL FILTRO
+
+
+
+// POR TEMAS DE PERFORMANCE/ DIFICULTAD NO SE TOMA EN CUENTA MAS DE [MAX_POSTEOS] MENSAJES FILTRADOS, ES DECIR, SIEMPRE SE TOMARAN EN CUENTA LOS ULTIMOS [MAX_POSTEOS] QUE COINCIDAN CON EL FILTRO

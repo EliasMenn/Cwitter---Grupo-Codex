@@ -127,18 +127,19 @@ int obtenerPosicionN(tListaDoble* p, void* informacion, size_t tam_informacion, 
 {
     int i = 0;
     tNodoD* act = *p;
-    if(!act)
+
+    if (!act || N < 0)
         return -1;
 
-    while(i<N)
+    while (i < N)
     {
         act = act->siguiente;
-        if(!act)
+        if (!act)
             return -1;
         i++;
     }
 
-    memcpy(informacion,act->informacion,MIN(tam_informacion,act->tam_informacion));
+    memcpy(informacion, act->informacion, MIN(tam_informacion, act->tam_informacion));
     return 0;
 }
 

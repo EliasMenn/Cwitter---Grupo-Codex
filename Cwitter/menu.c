@@ -116,6 +116,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
 
     do
     {
+        combinarPosteos();
         limpiar_pantalla();
         printf("+========================================+\n");
         printf("|      << CWITTER - MENU USUARIO >>      |\n");
@@ -209,7 +210,6 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             printf("Escribe tu tweet (Max 140 caracteres):\n> ");
             if(guardarPosteo(*usuarioLogueado) == 0)
             {
-                combinarPosteos();
                 printf("\nPublicacion guardada exitosamente.\n");
             }
             else
@@ -240,7 +240,6 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
                 break;
             }
 
-            combinarPosteos();
             strcpy(patronFiltro.publicacion, termino);
             cargarPostsFiltrados(&feedFiltro, cmpTexto, &patronFiltro);
 
@@ -402,6 +401,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
         case 0:
             printf("\nCerrando sesion de @%s...\n", usuarioLogueado->usuario);
             pausar();
+            combinarPosteos();
             break;
 
         default:
@@ -460,6 +460,7 @@ void menu_iniciar(tLista *indicesUsuarios, tPila *pilaLibres, unsigned *ultimoId
             break;
 
         case 2:
+
             limpiar_pantalla();
             printf("+================================+\n");
             printf("|      << INICIAR SESION >>      |\n");
