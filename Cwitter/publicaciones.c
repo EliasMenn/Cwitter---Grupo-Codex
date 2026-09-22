@@ -2,7 +2,7 @@
 
 void mostrarPosteo(tPosteo pub)
 {
-    printf("[Tweet #%u] @%s:\n  \"%s\"\n", pub.id, pub.nombreUsuario, pub.publicacion);
+    printf("[Tweet #%u] @%s:\n  \"%s\"\n\n", pub.id, pub.nombreUsuario, pub.publicacion);
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
@@ -116,38 +116,43 @@ void iniciarFeed(tFeed* feed)
 void siguientePosteo(tFeed* feed)
 {
     tPosteo posteo;
-    int i, cargados;
-    int ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
+    int i;
+    int cargados;
+    int ok;
+    int j;
 
-    if (ok != 0)
+    for(i = 0; i < 3; i++)
     {
-        cargados = cargarNPosteos(&feed->p, feed->offset,
-                                  CAMBIO_PUBLICACIONES, agregarAlFinal);
+        ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
 
-        if (cargados > 0)
+        if (ok != 0)
         {
-            for (i = 0; i < cargados; i++)
-                quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
+            cargados = cargarNPosteos(&feed->p, feed->offset,
+                                      CAMBIO_PUBLICACIONES, agregarAlFinal);
 
-            feed->posteo_actual -= cargados;
-            feed->offset += (long)cargados * (long)sizeof(tPosteo);
-            feed->inicio += (long)cargados * (long)sizeof(tPosteo);
+            if (cargados > 0)
+            {
+                for (j = 0; j < cargados; j++)
+                {
+                    quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
+                }
 
-            ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
+                feed->posteo_actual -= cargados;
+                feed->offset += (long)cargados * (long)sizeof(tPosteo);
+                feed->inicio += (long)cargados * (long)sizeof(tPosteo);
+
+                ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
+            }
         }
-    }
 
-    if (ok == 0)
-    {
-        mostrarPosteo(posteo);
-        feed->posteo_actual++;
-    }
-    else
-    {
-        if (feed->posteo_actual > 0 &&
-            obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual - 1) == 0)
+        if (ok == 0)
         {
+            mostrarPosteo(posteo);
             feed->posteo_actual++;
+        }
+        else
+        {
+            break;
         }
     }
 }
@@ -155,12 +160,14 @@ void siguientePosteo(tFeed* feed)
 void posteoAnterior(tFeed* feed)
 {
     tPosteo posteo;
-    int i, cargados, objetivo;
+    int cargados;
+    int objetivo;
+    int j;
 
-    if (feed->posteo_actual < 1)
+    feed->posteo_actual -= 6;
+    if (feed->posteo_actual < 0)
     {
         feed->posteo_actual = 0;
-        return;
     }
 
     objetivo = feed->posteo_actual - 2;
@@ -171,8 +178,10 @@ void posteoAnterior(tFeed* feed)
 
         if (cargados > 0)
         {
-            for (i = 0; i < cargados; i++)
-                quitarDelFinal(&feed->p, &posteo, sizeof(tPosteo));
+            for (j = 0; j < cargados; j++)
+            {
+                quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
+            }
 
             feed->posteo_actual += cargados;
             feed->offset -= (long)cargados * (long)sizeof(tPosteo);
@@ -182,17 +191,8 @@ void posteoAnterior(tFeed* feed)
         }
     }
 
-    if (objetivo >= 0 && obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), objetivo) == 0)
-    {
-        mostrarPosteo(posteo);
-        feed->posteo_actual--;
-    }
-    else if (objetivo < 0)
-    {
-        feed->posteo_actual = 0;
-    }
+    siguientePosteo(feed);
 }
-
 void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroFiltro)
 {
     crearListaD(&feed->p);

@@ -3,7 +3,7 @@
 
 #define MAX_PUBLICACIONES 5
 #define MAX_CHARS 80
-#define CAMBIO_PUBLICACIONES 1
+#define CAMBIO_PUBLICACIONES 3
 #define LARGO_MAX 141
 #include "global/ListaDoble.h"
 #include "usuarios.h"

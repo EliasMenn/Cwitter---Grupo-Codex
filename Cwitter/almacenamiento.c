@@ -378,7 +378,7 @@ int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
             if(strcmp(pub.nombreUsuario, nombreUsuario) != 0)
             {
                 noAutorizado = 1;
-                fwrite(&pub, sizeof(tPosteo), 1, archNue); // Se conserva el tweet en el archivo nuevo
+                fwrite(&pub, sizeof(tPosteo), 1, archNue);
             }
         }
         else
