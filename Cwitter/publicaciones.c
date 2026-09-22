@@ -2,7 +2,7 @@
 
 void mostrarPosteo(tPosteo pub)
 {
-    printf("[Tweet #%u] @%s:\n  \"%s\"\n", pub.id, pub.nombreUsuario, pub.publicacion);
+    printf("[Tweet #%u] @%s:\n  \"%s\"\n\n", pub.id, pub.nombreUsuario, pub.publicacion);
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
@@ -17,15 +17,13 @@ void crearPosteo (tPosteo* pub, tUsuario user)
 
         size_t len = strlen(pub->publicacion);
         char* ultimo = pub->publicacion + len -1;
-        // quitar el \n si esta presente
         if (len > 0 && *ultimo == '\n') {
             *ultimo = '\0';
             len--;
         } else {
-            // no habia \n: la linea era mas larga que el buffer, limpiar stdin
             int c;
             while ((c = getchar()) != '\n' && c != EOF);
-            len = MAX_CHARS + 1; // forzar que se considere invalido
+            len = MAX_CHARS + 1;
         }
 
         if (len > MAX_CHARS) {
@@ -46,21 +44,43 @@ int cmpNombreUsuario(void* a, void* b)
 
 int cmpTexto(void* a, void* b)
 {
-    tPosteo* n1 = (tPosteo*) a;
-    tPosteo* n2 = (tPosteo*) b;
+    tPosteo* n1;
+    tPosteo* n2;
+    const char *str;
+    const char *pat;
+    const char *star;
+    const char *backtrack;
+    char cStr;
+    char cPat;
 
-    const char *str = n1->publicacion;   // text
-    const char *pat = n2->publicacion;   // pattern, e.g. "*quick*"
-    const char *star = NULL, *backtrack = NULL;
+    n1 = (tPosteo*) a;
+    n2 = (tPosteo*) b;
+
+    str = n1->publicacion;
+    pat = n2->publicacion;
+    star = NULL;
+    backtrack = NULL;
 
     while (*str)
     {
+        cStr = *str;
+        if (cStr >= 'A' && cStr <= 'Z')
+        {
+            cStr = cStr + 32;
+        }
+
+        cPat = *pat;
+        if (cPat >= 'A' && cPat <= 'Z')
+        {
+            cPat = cPat + 32;
+        }
+
         if (*pat == '*')
         {
             star = pat++;
             backtrack = str;
         }
-        else if (*pat == '?' || *pat == *str)
+        else if (*pat == '?' || cPat == cStr)
         {
             pat++;
             str++;
@@ -70,13 +90,18 @@ int cmpTexto(void* a, void* b)
             pat = star + 1;
             str = ++backtrack;
         }
-        else return 1;   // no match
+        else
+        {
+            return 1;
+        }
     }
 
     while (*pat == '*')
+    {
         pat++;
+    }
 
-    return (*pat == '\0') ? 0 : 1;   // 0 = match, 1 = no match
+    return (*pat == '\0') ? 0 : 1;
 }
 
 void iniciarFeed(tFeed* feed)
@@ -91,65 +116,89 @@ void iniciarFeed(tFeed* feed)
 void siguientePosteo(tFeed* feed)
 {
     tPosteo posteo;
-    int i, cargados;
+    int i;
+    int cargados;
+    int ok;
+    int j;
 
-    if(feed->posteo_actual == MAX_PUBLICACIONES)
+    for(i = 0; i < 3; i++)
     {
-        cargados = cargarNPosteos(&feed->p, feed->offset,
-                                  CAMBIO_PUBLICACIONES, agregarAlFinal);
+        ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
 
-        if(cargados > 0)
+        if (ok != 0)
         {
-            for(i = 0; i < cargados; i++)
-                quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
+            cargados = cargarNPosteos(&feed->p, feed->offset,
+                                      CAMBIO_PUBLICACIONES, agregarAlFinal);
 
-            feed->posteo_actual -= cargados;
-            feed->offset += cargados * sizeof(tPosteo);
-            feed->inicio += cargados * sizeof(tPosteo);
+            if (cargados > 0)
+            {
+                for (j = 0; j < cargados; j++)
+                {
+                    quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
+                }
+
+                feed->posteo_actual -= cargados;
+                feed->offset += (long)cargados * (long)sizeof(tPosteo);
+                feed->inicio += (long)cargados * (long)sizeof(tPosteo);
+
+                ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
+            }
         }
-    }
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
-    {
-        mostrarPosteo(posteo);
-        feed->posteo_actual++;
+        if (ok == 0)
+        {
+            mostrarPosteo(posteo);
+            feed->posteo_actual++;
+        }
+        else
+        {
+            break;
+        }
     }
 }
 
 void posteoAnterior(tFeed* feed)
 {
     tPosteo posteo;
-    int i, cargados;
+    int cargados;
+    int objetivo;
+    int j;
 
-    if(feed->posteo_actual == 0)
+    feed->posteo_actual -= 6;
+    if (feed->posteo_actual < 0)
     {
-        cargados = cargarNPosteosAtras(&feed->p, feed->inicio,
-                                        CAMBIO_PUBLICACIONES);
+        feed->posteo_actual = 0;
+    }
 
-        if(cargados > 0)
+    objetivo = feed->posteo_actual - 2;
+
+    if (objetivo < 0)
+    {
+        cargados = cargarNPosteosAtras(&feed->p, feed->inicio, CAMBIO_PUBLICACIONES);
+
+        if (cargados > 0)
         {
-            for(i = 0; i < cargados; i++)
-                quitarDelFinal(&feed->p, &posteo, sizeof(tPosteo));
+            for (j = 0; j < cargados; j++)
+            {
+                quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
+            }
 
             feed->posteo_actual += cargados;
-            feed->offset -= cargados * sizeof(tPosteo);
-            feed->inicio -= cargados * sizeof(tPosteo);
+            feed->offset -= (long)cargados * (long)sizeof(tPosteo);
+            feed->inicio -= (long)cargados * (long)sizeof(tPosteo);
+
+            objetivo = feed->posteo_actual - 2;
         }
     }
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
-    {
-        mostrarPosteo(posteo);
-        feed->posteo_actual--;
-    }
+    siguientePosteo(feed);
 }
-
 void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroFiltro)
 {
     crearListaD(&feed->p);
-    feed->posteo_actual = -1;
+    feed->posteo_actual = 0;
     feed->offset = cargarNPosteosFiltrado(&feed->p, 0,
-                   MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro)*sizeof(tPosteo);
+                   MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro) * sizeof(tPosteo);
     feed->inicio = 0;
 }
 
@@ -157,21 +206,40 @@ void siguientePosteoFiltrados(tFeed* feed)
 {
     tPosteo posteo;
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if (obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual++;
+    }
+    else
+    {
+
+        if (feed->posteo_actual > 0 &&
+            obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual - 1) == 0)
+        {
+            feed->posteo_actual++;
+        }
     }
 }
 
 void posteoAnteriorFiltrado(tFeed* feed)
 {
     tPosteo posteo;
+    int objetivo = feed->posteo_actual - 2;
 
-    if(obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual) == 0)
+    if (objetivo < 0)
+    {
+        feed->posteo_actual = 0;
+        return;
+    }
+
+    if (obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), objetivo) == 0)
     {
         mostrarPosteo(posteo);
         feed->posteo_actual--;
     }
 }
-// POR TEMAS DE PERFORMANCE/ DIFICULTAD NO SE TOMA EN CUENTA MAS DE 100 MENSAJES FILTRADOS, ES DECIR, SIEMPRE SE TOMARAN EN CUENTA LOS ULTIMOS 100 QUE COINCIDAN CON EL FILTRO
+
+
+
+// POR TEMAS DE PERFORMANCE/ DIFICULTAD NO SE TOMA EN CUENTA MAS DE [MAX_POSTEOS] MENSAJES FILTRADOS, ES DECIR, SIEMPRE SE TOMARAN EN CUENTA LOS ULTIMOS [MAX_POSTEOS] QUE COINCIDAN CON EL FILTRO

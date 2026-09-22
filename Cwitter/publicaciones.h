@@ -1,9 +1,9 @@
 #ifndef PUBLICACIONES_H_INCLUDED
 #define PUBLICACIONES_H_INCLUDED
 
-#define MAX_PUBLICACIONES 100
+#define MAX_PUBLICACIONES 5
 #define MAX_CHARS 80
-#define CAMBIO_PUBLICACIONES 10
+#define CAMBIO_PUBLICACIONES 3
 #define LARGO_MAX 141
 #include "global/ListaDoble.h"
 #include "usuarios.h"

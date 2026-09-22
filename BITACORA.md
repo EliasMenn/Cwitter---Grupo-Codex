@@ -60,13 +60,15 @@ Estructura en memoria representada como una lista doblemente enlazada de posteos
 * **Decisión y justificación**: Se utilizó una **Pila (`tPila`)** para guardar las posiciones libres (`tEspacioLibre`). Ante un alta, se consulta primero la pila: si hay huecos disponibles, se reutiliza inmediatamente el último offset desapilado, sobrescribiendo la posición en disco. Si la pila está vacía, se escribe al final del archivo. Al reiniciar el programa, la pila se reconstruye leyendo los registros con `estado == 'B'` desde el archivo de índices.
 
 ### 2.3. Feed de Publicaciones en Memoria: Lista Doblemente Enlazada (`tListaDoble`)
-* **Problema a resolver**: Presentar las publicaciones al usuario permitiendo navegar hacia adelante (`[S] Siguiente`), hacia atrás (`[A] Anterior`), y eliminar tweets sin tener que recargar todas las publicaciones desde el archivo.
+* **Problema a resolver**: Presentar las publicaciones al usuario permitiendo navegar hacia adelante (`[S] Siguiente`), hacia atrás (`[A] Anterior`), asegurar que no se exceda la memoria disponible del sistema
+    y eliminar tweets sin tener que recargar todas las publicaciones desde el archivo.
 * **Alternativas consideradas**:
   1. *Lista simplemente enlazada*: No permite retroceder al tweet anterior sin reiniciar el recorrido desde el inicio de la lista.
   2. *Vector dinámico en memoria*: Moverse es eficiente, pero la eliminación de un tweet intermedio requiere desplazar todos los elementos posteriores en memoria. Esto implicaría una gran cantidad de copias en memoria, lo cual es ineficiente.
   3. *Lista doblemente enlazada*: Enlaces `sig` y `ant` por nodo.
 * **Decisión y justificación**: Se eligió la **Lista Doblemente Enlazada (`tListaDoble`)**. Permite navegación en ambos sentidos, y ante la eliminación de cualquier posteo (primer tweet, último o uno intermedio), la desvinculación y liberación del nodo se realiza reajustando punteros sin mover informacion en memoria. Los posteos se presentan en orden cronológico inverso (el más reciente primero), replicando el comportamiento estándar de redes sociales.
-
+* **Metodo de implementacion**: Debido a que no sabemos la cantidad real de publicaciones no podemos optar por cargar el archivo entero y realizar una carga cada vez que el usuario quiera ver un tweet nuevo es un desproposito. por eso optamos por una implementacion de `visor` donde cargamos una cantidad M, al llegar al ultimo de estos posteos, quitamos de memoria los N primeros y agregamos la misma cantidad al final. 
+Si el usuario volviera hasta el comienzo (y no estemos al comienzo de archivo) quitamos los N ultimos registros del final de nuestra lista y agregamos la misma cantidad al comienzo.
 ---
 
 ## 3. Formato y Estrategia de Persistencia
@@ -79,7 +81,9 @@ Para garantizar que la informacion persista entre ejecuciones del programa y ade
 
 ### 3.2. Estrategia de Doble Archivo para Publicaciones
 * **Buffer Temporal (`datos/posteos_temp.dat`)**: Cuando el usuario redacta una publicación, esta se persiste de inmediato en un archivo de lote temporal.
-* **Consolidación (`combinarPosteos`)**: Se combinan las publicaciones temporales con el archivo histórico principal `datos/posteos.dat`. Para optimizar escrituras masivas y evitar contención o bloqueos en disco, los nuevos posteos se integran en bloque.
+* **Consolidación (`combinarPosteos`)**: Se combinan las publicaciones temporales con el archivo histórico principal `datos/posteos.dat`. Para optimizar escrituras masivas y evitar contención o bloqueos en disco, los nuevos posteos se integran al archivo temporal/buffer y cuando el usuario cierra su sesion
+    se combinan con los posteos anteriores, asegurando de invertir el orden del archivo temporal antes de insertarlo al comienzo de todo (asegurando que el orden sea de la publicacion mas nueva a la mas vieja) esta funcion tambien se ejecuta al comienzo por si el programa fuese cerrado de manera abrupta 
+    no haya perdida de ninguna publicacion. no se ejecuta tras cada publicacion por el alto coste de reescribir todo el archivo
 * **Eliminación Segura**: Al borrar una publicación en disco, se utiliza la técnica estándar de archivo nuevo temporal (`posteos_nue.dat`) copiando únicamente las publicaciones activas y renombrando con `rename()`. Esto evita dejar registros corruptos y asegura la integridad ante caídas inesperadas del sistema.
 
 ---
