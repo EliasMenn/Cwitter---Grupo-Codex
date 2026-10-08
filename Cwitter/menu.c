@@ -121,7 +121,9 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
         printf("+========================================+\n");
         printf("|      << CWITTER - MENU USUARIO >>      |\n");
         printf("+========================================+\n");
-        printf("| Sesion activa: @%-22s |\n", usuarioLogueado->usuario);
+        printf("| Sesion activa: @%-15s %s |\n",
+       usuarioLogueado->usuario,
+       usuarioLogueado->verificado == 'S' ? "[VERIFICADO]" : "            ");
         printf("+========================================+\n");
         printf("|  1. Ver Feed de publicaciones          |\n");
         printf("|  2. Nueva publicacion                  |\n");
@@ -301,7 +303,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             tPosteo patronFiltro;
             char termino[LARGO_MAX];
             char tecla;
-            char temp[LARGO_MAX];
+            char temp[LARGO_MAX + 4];// para evitar agregar los asteriscos manualmente le agregue esos 4 bits que ocuparian los astericos y la barra cero, basicamente que no se trunque
             int i;
 
             limpiar_pantalla();
@@ -475,7 +477,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             tPosteo patronFiltro;
             char termino[LARGO_MAX];
             char tecla;
-            char temp[LARGO_MAX];
+            char temp[LARGO_MAX + 4];
             int i;
 
             limpiar_pantalla();

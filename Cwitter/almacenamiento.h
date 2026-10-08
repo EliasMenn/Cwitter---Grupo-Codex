@@ -6,6 +6,8 @@
 #include "global/pila.h"
 #include "usuarios.h"
 #include "publicaciones.h"
+#include "famecheck.h"
+
 #define ARCHIVO_USUARIOS "datos/usuarios.dat"
 #define ARCHIVO_INDICES_USUARIOS "datos/indice_usuarios.idx"
 #define ARCHIVO_POSTEOS "datos/posteos.dat"

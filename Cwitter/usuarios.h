@@ -3,6 +3,7 @@
 
 #include "global/lista.h"
 #include "global/pila.h"
+#include "famecheck.h"
 
 #define MIN_USUARIO 6
 #define MAX_USUARIO 21
@@ -15,16 +16,18 @@ typedef struct
     unsigned id;
     char usuario[MAX_USUARIO];
     char contrasenia[MAX_CONTRASENIA];
-    char estado; // 'A' activo, 'B' baja logica
+    char estado;     // 'A' activo, 'B' baja logica
+    char verificado; // 'S' verificado por FameCheck, 'N' no verificado
 } tUsuario;
 
 typedef struct
 {
     unsigned id;
     char usuario[MAX_USUARIO];
-    long offsetDat; // Posicion en usuarios.dat
-    long offsetIdx; // Posicion en indice_usuarios.idx (para la baja logica)
+    long offsetDat;
+    long offsetIdx;
     char estado;
+    char verificado; // 'S' o 'N'
 } tIndiceUsuario;
 
 typedef enum

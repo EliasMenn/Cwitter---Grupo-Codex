@@ -298,6 +298,12 @@ int guardarPosteo(tUsuario usuario)
     crearPosteo(&pub, usuario);
     fwrite(&pub,sizeof(tPosteo),1,posteo);
     fclose(posteo);
+
+    if(usuario.verificado == 'S')
+    {
+        famecheck_reportar_tweet(usuario.usuario, pub.publicacion);
+    }
+
     return 0;
 }
 

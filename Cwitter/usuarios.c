@@ -51,7 +51,7 @@ eUsuarioRet usuario_registrar( tLista *listaIndices, tPila *pilaLibres, unsigned
 {
     tUsuario nuevoUsuario;
     tIndiceUsuario nuevoIndice;
-    int resultado;
+    int resultado, esVerif;
 
     if( listaIndices == NULL || ultimoId == NULL || usuario == NULL || contrasenia == NULL)
     {
@@ -93,6 +93,10 @@ eUsuarioRet usuario_registrar( tLista *listaIndices, tPila *pilaLibres, unsigned
     {
         return USUARIO_DUPLICADO;
     }
+
+    esVerif = famecheck_verificar_cuenta(usuario);
+    nuevoUsuario.verificado = esVerif ? 'S' : 'N';
+    nuevoIndice.verificado  = nuevoUsuario.verificado;
 
     nuevoUsuario.id = *ultimoId + 1;
     strcpy(nuevoUsuario.usuario, usuario);
