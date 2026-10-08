@@ -35,6 +35,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="almacenamiento.h" />
+		<Unit filename="cJSON.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cJSON.h" />
 		<Unit filename="global/ListaDoble.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -54,14 +58,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="menu.h" />
-		<Unit filename="tests.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="tests.h" />
 		<Unit filename="publicaciones.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="publicaciones.h" />
+		<Unit filename="tests.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tests.h" />
 		<Unit filename="usuarios.c">
 			<Option compilerVar="CC" />
 		</Unit>

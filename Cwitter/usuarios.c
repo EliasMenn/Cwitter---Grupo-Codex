@@ -173,6 +173,6 @@ int usuario_modificar_contrasenia(tLista *listaIndices, const char *usuario, con
             return almacenamiento_actualizar_usuario(indiceBuscado.offsetDat, &usuarioFisico);
         }
     }
-    
+
     return 0;
 }
