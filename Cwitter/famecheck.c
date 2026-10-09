@@ -100,6 +100,9 @@ int famecheck_verificar_cuenta(const char *nombreUsuario)
     tBufferHttp resp;
 
     if (ejecutar_post(url, body, &resp, &code)) {
+        //////////////////////
+            printf("\n>>> [RESPUESTA FAMECHECK] HTTP %ld: %s <<<\n", code, resp.datos);
+    //////////////////////////////
         if (code == 200 || code == 201) {
             cJSON *jsonResp = cJSON_Parse(resp.datos);
             if (jsonResp) {
