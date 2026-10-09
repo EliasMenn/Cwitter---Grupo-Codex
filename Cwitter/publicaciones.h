@@ -5,6 +5,7 @@
 #define MAX_CHARS 80
 #define CAMBIO_PUBLICACIONES 3
 #define LARGO_MAX 141
+#include <time.h>
 #include "global/ListaDoble.h"
 #include "usuarios.h"
 #include "almacenamiento.h"
@@ -18,6 +19,8 @@ typedef struct{
 typedef struct{
     unsigned id;
     char nombreUsuario[MAX_USUARIO];
+    char verificado;
+    time_t fecha;
     char publicacion[LARGO_MAX];
 }tPosteo;
 

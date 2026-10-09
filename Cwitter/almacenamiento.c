@@ -309,6 +309,7 @@ int guardarPosteo(tUsuario usuario)
 
 int combinarPosteos()
 {
+    int primero = 0, tmpVerificado = 0, volcado = 0;
     tLista p;
     lista_crear(&p);
     tPosteo publicacion;
@@ -331,21 +332,38 @@ int combinarPosteos()
     }
     while(fread(&publicacion, sizeof(tPosteo), 1, posteo_tmp) == 1)
     {
+        if(primero == 0)
+        {
+            if(publicacion.verificado == 'S')
+            {
+                tmpVerificado = 1;
+            }
+            primero = 1;
+        }
         lista_insertar_comienzo(&p,&publicacion,sizeof(tPosteo));
     }
-    while(lista_vacia(&p) == LISTA_TODO_OK)
+    if(tmpVerificado == 1)
     {
-        lista_sacar_primero(&p,&publicacion,sizeof(tPosteo));
-        fwrite(&publicacion,sizeof(tPosteo),1,posteo_nue);
+        volcarPosteo(&p,posteo_nue);
+        volcado = 1;
     }
     if(posteo != NULL)
     {
         while(fread(&publicacion, sizeof(tPosteo), 1, posteo) == 1)
         {
+            if(volcado == 0 && publicacion.verificado != 'S')
+            {
+                volcarPosteo(&p, posteo_nue);
+                volcado = 1;
+            }
             fwrite(&publicacion,sizeof(tPosteo),1,posteo_nue);
         }
         fclose(posteo);
     }
+
+    if(!volcado)
+        volcarPosteo(&p, posteo_nue);
+
     fclose(posteo_tmp);
     fclose(posteo_nue);
 
@@ -355,6 +373,15 @@ int combinarPosteos()
     return 0;
 }
 
+void volcarPosteo(tLista* p, FILE* destino)
+{
+    tPosteo publicacion;
+    while(lista_vacia(p) == LISTA_TODO_OK)
+    {
+        lista_sacar_primero(p, &publicacion, sizeof(tPosteo));
+        fwrite(&publicacion, sizeof(tPosteo), 1, destino);
+    }
+}
 int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
 {
     combinarPosteos();

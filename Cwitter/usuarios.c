@@ -180,3 +180,17 @@ int usuario_modificar_contrasenia(tLista *listaIndices, const char *usuario, con
 
     return 0;
 }
+
+int cmpCweetsDesc(const void* a, const void* b)
+{
+    tUsuarioVerificado* n1 = (tUsuarioVerificado*) a;
+    tUsuarioVerificado* n2 = (tUsuarioVerificado*) b;
+
+    return n2->cantidadCweets - n1->cantidadCweets;
+}
+
+void mostrarTopVerificado(void* dato, void* extra)
+{
+    tUsuarioVerificado* n1 = (tUsuarioVerificado*) dato;
+    printf("Usuario: %s, Numero de publicaciones: [%d]", n1->usuario, n1->cantidadCweets);
+}

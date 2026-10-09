@@ -22,6 +22,12 @@ typedef struct
 
 typedef struct
 {
+    char usuario[MAX_USUARIO];
+    int cantidadCweets;
+} tUsuarioVerificado;
+
+typedef struct
+{
     unsigned id;
     char usuario[MAX_USUARIO];
     long offsetDat;
@@ -60,5 +66,6 @@ int usuario_dar_baja(tLista *listaIndices, tPila *pilaLibres, const char *usuari
 int usuario_modificar_contrasenia(tLista *listaIndices, const char *usuario, const char *nuevaContrasenia);
 int usuario_comparar(const void *datoA, const void *datoB);
 int usuario_comparar_login(const void *datoA, const void *datoB);
-
+int cmpCweetsDesc(const void* a, const void* b);
+void mostrarTopVerificado(void* dato, void* extra);
 #endif

@@ -153,3 +153,117 @@ int famecheck_reportar_tweet(const char *nombreUsuario, const char *mensaje)
     cJSON_free(body);
     return exito;
 }
+
+static int ejecutar_get(const char *url, const char *bodyJson, tBufferHttp *resp, long *httpCode)
+{
+    CURL *curl = curl_easy_init();
+    if (!curl) return 0;
+
+    struct curl_slist *headers = NULL;
+    char authHeader[160];
+    snprintf(authHeader, sizeof(authHeader), "Authorization: Bearer %s", FAMECHECK_API_KEY);
+    headers = curl_slist_append(headers, authHeader);
+    headers = curl_slist_append(headers, "Accept: application/json");
+
+    resp->datos = malloc(1);
+    resp->tamanio = 0;
+    if (resp->datos) resp->datos[0] = '\0';
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback_escribir);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)resp);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, TIMEOUT_HTTP);
+
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+        char errBuf[256];
+        snprintf(errBuf, sizeof(errBuf), "curl_easy_perform error: %s", curl_easy_strerror(res));
+        famecheck_registrar_fallo("GET", errBuf);
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+        if (resp->datos) { free(resp->datos); resp->datos = NULL; }
+        return 0;
+    }
+
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, httpCode);
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return 1;
+}
+
+int obtenerTopCuentas(tLista *top)
+{
+    tUsuarioVerificado ultima;
+    tUsuarioVerificado cuenta;
+    char url[256];
+    tBufferHttp resp = { NULL, 0 };
+    long codigo = 0;
+    int cant = 0;
+
+    if (!top)
+        return -1;
+
+    int n = snprintf(url, sizeof(url), "%s/api/Cwitter/Cweet", FAMECHECK_BASE_URL);
+    if (n < 0 || n >= (int)sizeof(url))
+        return -1;
+
+    if (!ejecutar_get(url, NULL, &resp, &codigo))
+        return -1;
+
+    if (codigo != 200)
+    {
+        free(resp.datos);
+        return -1;
+    }
+
+    cJSON *raiz = cJSON_Parse(resp.datos);
+    free(resp.datos);
+    if (!raiz)
+        return -1;
+
+    if (!cJSON_IsArray(raiz))
+    {
+        cJSON_Delete(raiz);
+        return -1;
+    }
+
+    cJSON *item;
+    cJSON_ArrayForEach(item, raiz)
+    {
+        cJSON *nombre = cJSON_GetObjectItemCaseSensitive(item, "nombre");
+        cJSON *cweets = cJSON_GetObjectItemCaseSensitive(item, "cantidadCweets");
+
+        if (!cJSON_IsString(nombre) || nombre->valuestring == NULL || !cJSON_IsNumber(cweets))
+            continue;
+
+        snprintf(cuenta.usuario, MAX_USUARIO, "%s", nombre->valuestring);
+        cuenta.cantidadCweets = cweets->valueint;
+
+        /* Si el top ya está lleno y esta cuenta no supera a la última, ni la insertamos */
+        if (cant == TOP_CUENTAS)
+        {
+            lista_ver_ultimo(top, &ultima, sizeof(ultima));
+            if (cuenta.cantidadCweets <= ultima.cantidadCweets)
+                continue;
+        }
+
+        if (lista_insertar_en_orden(top, &cuenta, sizeof(cuenta),
+                                    INSERTAR_CON_DUP, cmpCweetsDesc) != LISTA_TODO_OK)
+        {
+            lista_vaciar(top);
+            cJSON_Delete(raiz);
+            return -1;
+        }
+        cant++;
+
+        if (cant > TOP_CUENTAS)
+        {
+            lista_sacar_ultimo(top, &cuenta, sizeof(cuenta));
+            cant--;
+        }
+    }
+
+    cJSON_Delete(raiz);
+    return cant;
+}
