@@ -20,3 +20,10 @@
 | :---: | :--- | :--- | :--- | :---: |
 | **10** | **Intento de eliminar un tweet de otro usuario** | 1. Iniciar sesión con `@usuarioB`.<br>2. Seleccionar `4. Eliminar una publicacion`.<br>3. Ingresar el ID de un tweet publicado por `@usuarioA`.<br>4. Confirmar con `S`. | Se muestra en pantalla `"Error: No tiene permisos para eliminar este tweet."` y el tweet no es eliminado. | **OK** |
 | **11** | **Registro con nombre de usuario duplicado** | 1. En el menú principal, seleccionar `1. Registrarse`.<br>2. Ingresar un nombre de usuario que ya está registrado (ej: `franco`) y una contraseña válida. | Muestra `"Error: Ya existe un usuario registrado con ese nombre."` sin generar duplicados. | **OK** |
+
+#Sprint 2
+
+| # | Situación a probar | Pasos de la operacion | Salida esperada | Estado |
+| :---: | :--- | :--- | :--- | :---: |
+| **12** | **Registro de usuario verificado** | 1. Registramos `@usuarioVer` a traves de la opcion 1 "Registrar Usuario", ingresamos nombre y contraseña.| Se muestra en pantalla `"[RESPUESTA FAMECHECK] HTTP 200: {"nombre": "@usuarioVer", "verificado":"true""` luego de esto el uso de la aplicacion es el normal de cualquier usuario. | **OK** |
+| **12** | **Registro de usuario NO verificado** | 1. Registramos `@usuario` a traves de la opcion 1 "Registrar Usuario", ingresamos nombre y contraseña.| Se muestra en pantalla `"[RESPUESTA FAMECHECK] HTTP 200: {"nombre": "@usuarioVer", "verificado":"false""` luego de esto el uso de la aplicacion es el normal de cualquier usuario. | **OK** |
