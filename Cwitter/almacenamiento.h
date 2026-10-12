@@ -6,6 +6,8 @@
 #include "global/pila.h"
 #include "usuarios.h"
 #include "publicaciones.h"
+#include "famecheck.h"
+
 #define ARCHIVO_USUARIOS "datos/usuarios.dat"
 #define ARCHIVO_INDICES_USUARIOS "datos/indice_usuarios.idx"
 #define ARCHIVO_POSTEOS "datos/posteos.dat"
@@ -26,4 +28,5 @@ int combinarPosteos();
 unsigned almacenamiento_obtener_proximo_id_posteo(void);
 int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario);
 int almacenamiento_editar_posteo(unsigned idPosteo, const char *nombreUsuario, const char *nuevoTexto);
+void volcarPosteo(tLista* p, FILE* destino);
 #endif // ALMACENAMIENTO_H_INCLUDED
