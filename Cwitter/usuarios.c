@@ -192,5 +192,5 @@ int cmpCweetsDesc(const void* a, const void* b)
 void mostrarTopVerificado(void* dato, void* extra)
 {
     tUsuarioVerificado* n1 = (tUsuarioVerificado*) dato;
-    printf("Usuario: %s, Numero de publicaciones: [%d]", n1->usuario, n1->cantidadCweets);
+    printf("Usuario: %s, Numero de publicaciones: [%d]\n", n1->usuario, n1->cantidadCweets);
 }

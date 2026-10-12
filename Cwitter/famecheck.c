@@ -204,7 +204,7 @@ int obtenerTopCuentas(tLista *top)
     if (!top)
         return -1;
 
-    int n = snprintf(url, sizeof(url), "%s/api/Cwitter/Cweet", FAMECHECK_BASE_URL);
+    int n = snprintf(url, sizeof(url), "%s/api/Cwitter/Usuario", FAMECHECK_BASE_URL);
     if (n < 0 || n >= (int)sizeof(url))
         return -1;
 
@@ -240,7 +240,7 @@ int obtenerTopCuentas(tLista *top)
         snprintf(cuenta.usuario, MAX_USUARIO, "%s", nombre->valuestring);
         cuenta.cantidadCweets = cweets->valueint;
 
-        /* Si el top ya está lleno y esta cuenta no supera a la última, ni la insertamos */
+        /* Si el top ya estï¿½ lleno y esta cuenta no supera a la ï¿½ltima, ni la insertamos */
         if (cant == TOP_CUENTAS)
         {
             lista_ver_ultimo(top, &ultima, sizeof(ultima));
