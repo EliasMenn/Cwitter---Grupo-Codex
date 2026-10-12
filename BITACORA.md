@@ -125,3 +125,39 @@ En cumplimiento con la modalidad de trabajo de la cátedra, se detallan las cons
   Nos sugirió implementar bajas lógicas cambiando un campo de estado a `'B'` y almacenar los desplazamientos (`offsets`) disponibles en una pila LIFO o cola FIFO en memoria, para luego sobreescribir dichos offsets en las siguientes altas.
 * **Evaluación y decisión del equipo**:
   Decidimos que una estructura tipo **Pila (`tPila`)** era la solución óptima: Con su implementación como TDA dinámico, permite consultar si hay espacio disponible antes de hacer un `fseek` al final del archivo, y se puede reapilar fácilmente al leer los índices en el arranque del programa.
+
+# Sprint 2
+
+## 1 Modificaciones necesarias:
+
+Tras Realizar analisis de los requisitos nuevos, optamos por modificar los siguientes campos y funciones:
+
+### 1.1 Usuario:
+* Se le agrego un campo de verificado al usuario, permitiendo la persistencia de la verificacion a traves de sesiones.
+
+### 1.2 Publicaciones:
+* Se le agrego un campo de verificado a las publicaciones, permitiendo la identificacion de las mismas, a su vez facilitando la implementancion del orden solicitado
+* Se le agrego un campo de horario para permitir la visualizacion del orden (El orden ya existia pero no se almacenaba fecha y hora)
+
+### 1.3 Funcion de Combinar Posteos:
+* Se modifico la funcion para verificar el campo nuevo que agregamos a publicaciones, si coincide con el char 'S' insertamos esas publicaciones primero, sino se respeta el orden de publicacion.
+
+## 2 Implementaciones nuevas:
+
+### 2.1 UsuarioVerificado:
+* Se creo esta estructura para permitir identificar a los usuarios verificados y su cantidad de publicaciones, evitando asi bajar a memoria toda la informacion correspondiente a los mismos cuando nos solicitan el top 5 con mas publicaciones.
+
+### 2.2 Funciones de API
+* Se generaron multiples funciones relacionadas a la comunicacion con el API proporcionado, entre ellas una funcion de POST, GET y las funciones que procesan las respuestas segun que solicitud hagamos
+
+### 2.3 Estructuras de datos
+* Todas las funcionalidades implementadas en este sprint fueron implementadas bajo estructuras de datos ya presentes en nuestras librerias, principalmente la estructura de lista simplemente enlazada para los usuarios verificados y procesamiento del API. frente a el feed de publicaciones este ya se encontraba implementado bajo una estructura de lista doblemente enlazada.
+
+## 3. Registro de Uso de Inteligencia Artificial (IA)
+
+* **Prompt Utilizado:**
+  > *"Como podria implementar un GET request para obtener una lista de datos en formato json desde un API"*
+* **Resumen de la respuesta:**
+  > *"La IA (claude en este caso), propuso una funcion para obtener el request y procesar el json, haciendo ajustes menores segun lo que fuimos probando en la conversacion y cambiando el formato de devolucion"*
+* **Decision del equipo:**
+  > *"Tras probar la solucion propuesta e ir ajustando el resultado final (tnato consultando a la IA como ajustando a mano y probando), obtenemos una funcion que realiza el GET request y nos devuelve la informacion que necesitamos de manera tal que podamos procesarla sin mayores inconvenientes"*

@@ -698,6 +698,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             obtenerTopCuentas(&top);
             lista_recorrer(&top, mostrarTopVerificado, NULL);
             pausar();
+            lista_vaciar(&top);
             break;
         case 0:
             printf("\nCerrando sesion de @%s...\n", usuarioLogueado->usuario);
