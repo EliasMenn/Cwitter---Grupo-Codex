@@ -2,12 +2,16 @@
 
 void mostrarPosteo(tPosteo pub)
 {
-    printf("[Tweet #%u] @%s:\n  \"%s\"\n\n", pub.id, pub.nombreUsuario, pub.publicacion);
+    char buffer[20];
+    strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M", localtime(&pub.fecha));
+    printf("[Tweet #%u]%s @%s[%c]:\n  \"%s\"\n\n", pub.id, buffer, pub.nombreUsuario, pub.verificado, pub.publicacion);
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
 {
     strcpy(pub->nombreUsuario, user.usuario);
+    pub->verificado = user.verificado;
+    pub->fecha = time(NULL);
     int valido = 0;
     while(!valido)
     {

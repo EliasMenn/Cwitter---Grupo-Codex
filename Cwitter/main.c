@@ -4,6 +4,7 @@
 #include "almacenamiento.h"
 #include "menu.h"
 #include "tests.h"
+#include "famecheck.h"
 
 // Poner en 1 para ejecutar tests definidos
 // Poner en 0 para ejecutar normalmente
@@ -11,6 +12,8 @@
 
 int main()
 {
+    famecheck_inicializar();
+
     tLista indicesUsuarios;
     tPila pilaLibres;
     unsigned ultimoId = 0;
@@ -34,5 +37,6 @@ int main()
     lista_vaciar(&indicesUsuarios);
     vaciarPila(&pilaLibres);
 
+    famecheck_limpiar();
     return 0;
 }

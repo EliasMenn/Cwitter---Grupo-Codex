@@ -51,7 +51,7 @@ eUsuarioRet usuario_registrar( tLista *listaIndices, tPila *pilaLibres, unsigned
 {
     tUsuario nuevoUsuario;
     tIndiceUsuario nuevoIndice;
-    int resultado;
+    int resultado, esVerif;
 
     if( listaIndices == NULL || ultimoId == NULL || usuario == NULL || contrasenia == NULL)
     {
@@ -93,6 +93,10 @@ eUsuarioRet usuario_registrar( tLista *listaIndices, tPila *pilaLibres, unsigned
     {
         return USUARIO_DUPLICADO;
     }
+
+    esVerif = famecheck_verificar_cuenta(usuario);
+    nuevoUsuario.verificado = esVerif ? 'S' : 'N';
+    nuevoIndice.verificado  = nuevoUsuario.verificado;
 
     nuevoUsuario.id = *ultimoId + 1;
     strcpy(nuevoUsuario.usuario, usuario);
@@ -173,6 +177,20 @@ int usuario_modificar_contrasenia(tLista *listaIndices, const char *usuario, con
             return almacenamiento_actualizar_usuario(indiceBuscado.offsetDat, &usuarioFisico);
         }
     }
-    
+
     return 0;
+}
+
+int cmpCweetsDesc(const void* a, const void* b)
+{
+    tUsuarioVerificado* n1 = (tUsuarioVerificado*) a;
+    tUsuarioVerificado* n2 = (tUsuarioVerificado*) b;
+
+    return n2->cantidadCweets - n1->cantidadCweets;
+}
+
+void mostrarTopVerificado(void* dato, void* extra)
+{
+    tUsuarioVerificado* n1 = (tUsuarioVerificado*) dato;
+    printf("Usuario: %s, Numero de publicaciones: [%d]\n", n1->usuario, n1->cantidadCweets);
 }

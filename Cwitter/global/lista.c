@@ -235,4 +235,3 @@ int lista_buscar(const tLista *lista, void *dato, unsigned tamDato, tCmp cmp)
 }
 
 
-
