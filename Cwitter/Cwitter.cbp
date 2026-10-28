@@ -47,6 +47,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="global/ListaDoble.h" />
+		<Unit filename="global/arbol.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="global/arbol.h" />
 		<Unit filename="global/lista.c">
 			<Option compilerVar="CC" />
 		</Unit>

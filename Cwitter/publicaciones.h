@@ -18,6 +18,7 @@ typedef struct{
 
 typedef struct{
     unsigned id;
+    unsigned id_padre;
     char nombreUsuario[MAX_USUARIO];
     char verificado;
     time_t fecha;
