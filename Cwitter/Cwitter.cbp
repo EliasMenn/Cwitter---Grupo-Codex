@@ -59,6 +59,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="global/pila.h" />
+		<Unit filename="indices.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="indices.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -5,12 +5,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MIN(a,b)((a) < (b) ? (a) : (b))
+
 #define ARBOL_OK 1
 #define ERROR_MEM -1
 #define DUPLICADO 10
-
+#define NO_ENCONTRADO -5
+#define ENCONTRADO 5
 typedef struct sNodoA{
     void* dato;
+    size_t tamDato;
     int altura;
     struct sNodoA* der;
     struct sNodoA* izq;
@@ -25,6 +29,8 @@ void arbol_vaciar(tArbol* arbol);
 int arbol_insertar(tArbol* arbol, const void* dato, size_t tamDato, tCmp cmp);
 int arbol_quitar(tArbol* arbol, void* dato, size_t tamDato, tCmp cmp);
 int arbol_buscar(const tArbol* arbol, void* dato, size_t tamDato, tCmp cmp);
+int arbol_siguiente(const tArbol* arbol, const void* clave, void* dato, size_t tamDato, tCmp cmp);
+int arbol_anterior(const tArbol* arbol, const void* clave, void* dato, size_t tamDato, tCmp cmp);
 void arbol_recorrer_inorden(const tArbol* arbol, tAccion accion, void* ctx);
 void arbol_recorrer_inorden_inverso(const tArbol* arbol, tAccion accion, void* ctx);
 void arbol_recorrer_rango(const tArbol* arbol, const void* desde, const void* hasta,

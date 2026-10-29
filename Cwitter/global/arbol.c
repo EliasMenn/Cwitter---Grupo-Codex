@@ -30,6 +30,7 @@ int arbol_insertar(tArbol* arbol, const void* dato, size_t tamDato, tCmp cmp)
             return ERROR_MEM;
         }
         memcpy(nue->dato,dato,tamDato);
+        nue->tamDato = tamDato;
         nue->altura = 1;
         nue->izq = NULL;
         nue->der = NULL;
@@ -50,9 +51,86 @@ int arbol_insertar(tArbol* arbol, const void* dato, size_t tamDato, tCmp cmp)
     return rc;
 }
 int arbol_quitar(tArbol* arbol, void* dato, size_t tamDato, tCmp cmp);
-int arbol_buscar(const tArbol* arbol, void* dato, size_t tamDato, tCmp cmp);
-void arbol_recorrer_inorden(const tArbol* arbol, tAccion accion, void* ctx);
-void arbol_recorrer_inorden_inverso(const tArbol* arbol, tAccion accion, void* ctx);
+int arbol_buscar(const tArbol* arbol, void* dato, size_t tamDato, tCmp cmp)
+{
+    int c;
+    if(*arbol == NULL)
+        return NO_ENCONTRADO;
+    c = cmp(dato, (*arbol)->dato);
+    if(c == 0)
+    {
+        memcpy(dato,(*arbol)->dato,MIN(tamDato,(*arbol)->tamDato));
+        return ENCONTRADO;
+    }
+    if(c < 0)
+    {
+        return arbol_buscar(&(*arbol)->izq,dato,tamDato,cmp);
+    }
+    else
+    {
+        return arbol_buscar(&(*arbol)->der,dato,tamDato,cmp);
+    }
+}
+/* Menor elemento ESTRICTAMENTE mayor que clave (clave NULL: el menor de todos). */
+int arbol_siguiente(const tArbol* arbol, const void* clave, void* dato, size_t tamDato, tCmp cmp)
+{
+    const tNodoA* n = *arbol;
+    const tNodoA* cand = NULL;
+
+    while(n != NULL)
+    {
+        if(clave == NULL || cmp(clave, n->dato) < 0)
+        {
+            cand = n;           /* n es mayor que clave: candidato, buscar uno menor a la izquierda */
+            n = n->izq;
+        }
+        else
+            n = n->der;
+    }
+    if(cand == NULL)
+        return NO_ENCONTRADO;
+    memcpy(dato, cand->dato, MIN(tamDato, cand->tamDato));
+    return ENCONTRADO;
+}
+
+/* Mayor elemento ESTRICTAMENTE menor que clave (clave NULL: el mayor de todos). */
+int arbol_anterior(const tArbol* arbol, const void* clave, void* dato, size_t tamDato, tCmp cmp)
+{
+    const tNodoA* n = *arbol;
+    const tNodoA* cand = NULL;
+
+    while(n != NULL)
+    {
+        if(clave == NULL || cmp(clave, n->dato) > 0)
+        {
+            cand = n;           /* n es menor que clave: candidato, buscar uno mayor a la derecha */
+            n = n->der;
+        }
+        else
+            n = n->izq;
+    }
+    if(cand == NULL)
+        return NO_ENCONTRADO;
+    memcpy(dato, cand->dato, MIN(tamDato, cand->tamDato));
+    return ENCONTRADO;
+}
+
+void arbol_recorrer_inorden(const tArbol* arbol, tAccion accion, void* ctx)
+{
+    if(*arbol == NULL)
+        return;
+    arbol_recorrer_inorden(&(*arbol)->izq,accion,ctx);
+    accion((*arbol)->dato,ctx);
+    arbol_recorrer_inorden(&(*arbol)->der,accion,ctx);
+}
+void arbol_recorrer_inorden_inverso(const tArbol* arbol, tAccion accion, void* ctx)
+{
+    if(*arbol == NULL)
+        return;
+    arbol_recorrer_inorden_inverso(&(*arbol)->der,accion,ctx);
+    accion((*arbol)->dato,ctx);
+    arbol_recorrer_inorden_inverso(&(*arbol)->izq,accion,ctx);
+}
 void arbol_recorrer_rango(const tArbol* arbol, const void* desde, const void* hasta,
                           tCmp cmp, tAccion accion, void* ctx);
 int altura(const tNodoA* n)

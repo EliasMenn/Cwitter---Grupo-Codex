@@ -188,40 +188,104 @@ int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualiza
     return 1;
 }
 
-int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion))
+/* Lee del archivo el posteo al que apunta una entrada del indice. */
+static int leerPosteoPorIndice(FILE* archivo, const IndPosteo* ind, tPosteo* destino)
+{
+    return fseek(archivo, ind->offset, SEEK_SET) == 0 &&
+           fread(destino, sizeof(tPosteo), 1, archivo) == 1;
+}
+
+/* Vuelve a armar los dos arboles leyendo el archivo de posteos de principio a fin.
+   Llamar al iniciar y despues de cualquier cosa que reescriba el archivo (los offsets cambian). */
+int almacenamiento_reconstruir_indices(void)
+{
+    FILE* archivo;
+    tPosteo publicacion;
+    IndPosteo ip;
+    IndRespuesta ir;
+    long pos;
+    int ok = 1;
+
+    arbol_vaciar(indices_posteos());
+    arbol_vaciar(indices_respuestas());
+
+    archivo = fopen(ARCHIVO_POSTEOS, "rb");
+    if(!archivo)
+        return 1;                       /* sin archivo todavia: indices vacios */
+
+    pos = ftell(archivo);
+    while(fread(&publicacion, sizeof(tPosteo), 1, archivo) == 1)
+    {
+        ip.verificado = (publicacion.verificado == 'S');
+        ip.id_posteo = (int)publicacion.id;
+        /* una respuesta siempre es mas nueva que su padre; si no, el dato esta mal y se trata como posteo comun */
+        ip.id_padre = (publicacion.id_padre != 0 && publicacion.id_padre < publicacion.id) ? (int)publicacion.id_padre : 0;
+        ip.offset = pos;
+        if(arbol_insertar(indices_posteos(), &ip, sizeof(IndPosteo), cmpPosteoIndice) == ERROR_MEM)
+            ok = 0;
+
+        if(ip.id_padre != 0)            /* 0 = no es una respuesta */
+        {
+            ir.verificado = ip.verificado;
+            ir.id_posteo = ip.id_posteo;
+            ir.id_padre = ip.id_padre;
+            ir.offset = pos;
+            if(arbol_insertar(indices_respuestas(), &ir, sizeof(IndRespuesta), cmpRespuestaIndice) == ERROR_MEM)
+                ok = 0;
+        }
+        pos = ftell(archivo);
+    }
+    fclose(archivo);
+    return ok;
+}
+
+/* Carga hasta cantPosteos posteos que siguen a "desde" en el orden del feed: cada posteo con sus
+   respuestas debajo (desde NULL = empezar por el primero). Devuelve cuantos cargo. */
+int cargarNPosteos(tListaDoble* listaDoble, const IndPosteo* desde, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion))
 {
     unsigned i = 0;
     tPosteo publicacion;
+    IndPosteo cursor;
+    IndPosteo sig;
+    const IndPosteo* ref = desde;
     FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
     if(!posteos)
     {
         printf("Hubo un error al abrir el archivo\n");
         return 0;
     }
-    fseek(posteos,offset,SEEK_SET);
-    while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
+    while(i<cantPosteos &&
+          indices_siguiente_feed(ref, &sig) &&
+          leerPosteoPorIndice(posteos, &sig, &publicacion))
     {
         Func(listaDoble,&publicacion,sizeof(tPosteo));
+        cursor = sig;
+        ref = &cursor;
         i++;
     }
     fclose(posteos);
     return i;
 }
 
-int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
+/* Igual que cargarNPosteos pero solo se queda con los posteos para los que cmp(posteo, parametro) == 0. */
+int cargarNPosteosFiltrado(tListaDoble* listaDoble, const IndPosteo* desde, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
                            int cmp(void* a, void* b), void* parametro)
 {
     unsigned i = 0;
     tPosteo publicacion;
+    IndPosteo actual;
+    const IndPosteo* ref = desde;
     FILE* posteos = fopen(ARCHIVO_POSTEOS,"rb");
     if(!posteos)
     {
         printf("Hubo un error al abrir el archivo\n");
         return 0;
     }
-    fseek(posteos,offset,SEEK_SET);
-    while(i<cantPosteos && fread(&publicacion, sizeof(tPosteo), 1, posteos) == 1)
+    while(i<cantPosteos &&
+          arbol_siguiente(indices_posteos(), ref, &actual, sizeof(IndPosteo), cmpPosteoIndice) == ENCONTRADO &&
+          leerPosteoPorIndice(posteos, &actual, &publicacion))
     {
+        ref = &actual;
         if(cmp(&publicacion, parametro) == 0)
         {
             Func(listaDoble,&publicacion,sizeof(tPosteo));
@@ -233,27 +297,28 @@ int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned ca
     return i;
 }
 
-int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n)
+/* Carga hasta n posteos que van ANTES de "hasta" en el orden del feed, agregandolos al comienzo
+   de la lista de a uno (el mas cercano a "hasta" primero), asi la lista queda en orden. */
+int cargarNPosteosAtras(tListaDoble* p, const IndPosteo* hasta, int n)
 {
     FILE* publicacion = fopen(ARCHIVO_POSTEOS, "rb");
     tPosteo posteo;
-    long pos = inicio;
-    int cargados = 0, ok = 1;
+    IndPosteo cursor;
+    IndPosteo ant;
+    const IndPosteo* ref = hasta;
+    int cargados = 0;
 
     if(!publicacion)
         return 0;
 
-    while(ok && cargados < n && pos >= (long)sizeof(tPosteo))
+    while(cargados < n &&
+          indices_anterior_feed(ref, &ant) &&
+          leerPosteoPorIndice(publicacion, &ant, &posteo))
     {
-        if(fseek(publicacion, pos - (long)sizeof(tPosteo), SEEK_SET) == 0 &&
-           fread(&posteo, sizeof(tPosteo), 1, publicacion) == 1)
-        {
-            pos -= (long)sizeof(tPosteo);
-            agregarAlComienzo(p, &posteo, sizeof(tPosteo));
-            cargados++;
-        }
-        else
-            ok = 0;
+        agregarAlComienzo(p, &posteo, sizeof(tPosteo));
+        cursor = ant;
+        ref = &cursor;
+        cargados++;
     }
     fclose(publicacion);
     return cargados;
@@ -288,10 +353,11 @@ unsigned almacenamiento_obtener_proximo_id_posteo(void)
     return maxId + 1;
 }
 
-int guardarPosteo(tUsuario usuario)
+static int guardarPosteoPadre(tUsuario usuario, unsigned idPadre)
 {
     tPosteo pub;
     pub.id = almacenamiento_obtener_proximo_id_posteo();
+    pub.id_padre = idPadre;     /* 0 = posteo comun, otro valor = respuesta a ese posteo */
     FILE* posteo = fopen(ARCHIVO_POSTEOS_TEMP,"ab");
     if(!posteo)
         return -1;
@@ -305,6 +371,22 @@ int guardarPosteo(tUsuario usuario)
     }
 
     return 0;
+}
+
+int guardarPosteo(tUsuario usuario)
+{
+    return guardarPosteoPadre(usuario, 0);
+}
+
+/* Guarda una respuesta al posteo idPadre. Devuelve -2 si ese posteo no existe (o todavia no se
+   combino, ver combinarPosteos), si no lo mismo que guardarPosteo. */
+int guardarRespuesta(tUsuario usuario, unsigned idPadre)
+{
+    IndPosteo padre;
+
+    if(idPadre == 0 || !indices_buscar_posteo((int)idPadre, &padre))
+        return -2;
+    return guardarPosteoPadre(usuario, idPadre);
 }
 
 int combinarPosteos()
@@ -370,6 +452,7 @@ int combinarPosteos()
     remove(ARCHIVO_POSTEOS_TEMP);
     remove(ARCHIVO_POSTEOS);
     rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
+    almacenamiento_reconstruir_indices();   /* el archivo cambio: los offsets tambien */
     return 0;
 }
 
@@ -437,6 +520,7 @@ int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario)
 
     remove(ARCHIVO_POSTEOS);
     rename(ARCHIVO_POSTEOS_NUE, ARCHIVO_POSTEOS);
+    almacenamiento_reconstruir_indices();   /* al borrar, los offsets de los posteos siguientes cambian */
     return 1;
 }
 

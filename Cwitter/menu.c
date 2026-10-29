@@ -133,7 +133,8 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
         printf("|  5. Eliminar una publicacion           |\n");
         printf("|  6. Modificar contrasenia              |\n");
         printf("|  7. Dar de baja mi cuenta              |\n");
-        printf("|  8. Ver top de usuarios                |\n");
+        printf("|  8. Responder a un tweet               |\n");
+        printf("|  9. Ver top de usuarios                |\n");
         printf("|  0. Cerrar sesion                      |\n");
         printf("+========================================+\n");
         printf("Opcion: ");
@@ -691,6 +692,47 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             }
             break;
         case 8:
+        {
+            int idPadre;
+            IndPosteo padre;
+            int resRespuesta;
+            limpiar_pantalla();
+            printf("+========================================+\n");
+            printf("|          << RESPUESTA NUEVA >>         |\n");
+            printf("+========================================+\n\n");
+            printf("Ingrese el ID del tweet al que quiere responder: ");
+
+            if(scanf("%u", &idPadre) != 1)
+            {
+                limpiar_buffer();
+                printf("\nID invalido.\n");
+                pausar();
+                break;
+            }
+            limpiar_buffer();
+
+            if(!indices_buscar_posteo((int)idPadre, &padre))
+            {
+                printf("\nError: No se encontro ningun tweet con el ID #%u.\n", idPadre);
+                pausar();
+                break;
+            }
+
+            printf("\nEscribe tu respuesta (Max %d caracteres):\n> ", MAX_CHARS);
+            resRespuesta = guardarRespuesta(*usuarioLogueado, idPadre);
+            if(resRespuesta == 0)
+            {
+                printf("\nRespuesta guardada exitosamente.\n");
+            }
+            else
+            {
+                printf("\nError al guardar la respuesta.\n");
+            }
+            pausar();
+            break;
+            break;
+        }
+        case 9:
             limpiar_pantalla();
             printf("+========================================+\n");
             printf("|          << TOP %d USUARIOS >>         |\n", TOP_CUENTAS);

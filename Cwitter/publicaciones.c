@@ -4,7 +4,10 @@ void mostrarPosteo(tPosteo pub)
 {
     char buffer[20];
     strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M", localtime(&pub.fecha));
-    printf("[Tweet #%u]%s @%s[%c]:\n  \"%s\"\n\n", pub.id, buffer, pub.nombreUsuario, pub.verificado, pub.publicacion);
+    printf("[Tweet #%u]%s @%s[%c]", pub.id, buffer, pub.nombreUsuario, pub.verificado);
+    if(pub.id_padre != 0)
+        printf(" (en respuesta a #%u)", pub.id_padre);
+    printf(":\n  \"%s\"\n\n", pub.publicacion);
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
@@ -108,13 +111,63 @@ int cmpTexto(void* a, void* b)
     return (*pat == '\0') ? 0 : 1;
 }
 
+/* La posicion de la ventana se deduce de los posteos que contiene: cada tPosteo trae
+   su id y si es verificado, que es justo la clave del indice. */
+static void claveDePosteo(const tPosteo* p, IndPosteo* clave)
+{
+    clave->verificado = (p->verificado == 'S');
+    clave->id_posteo = (int)p->id;
+    clave->id_padre = (int)p->id_padre;
+    clave->offset = 0;                  /* no se usa para comparar */
+}
+
+/* Ultimo posteo de la ventana. Devuelve 0 si lo encontro, -1 si la lista esta vacia. */
+static int ultimoDeLaVentana(tListaDoble* p, tPosteo* ultimo)
+{
+    tPosteo aux;
+    int n = 0;
+    int hay = 0;
+
+    while(obtenerPosicionN(p, &aux, sizeof(tPosteo), n) == 0)
+    {
+        *ultimo = aux;
+        hay = 1;
+        n++;
+    }
+    return hay ? 0 : -1;
+}
+
+/* Agrega al final de la ventana los CAMBIO_PUBLICACIONES posteos que siguen al ultimo. */
+static int cargarSiguientes(tFeed* feed)
+{
+    tPosteo ultimo;
+    IndPosteo clave;
+
+    if(ultimoDeLaVentana(&feed->p, &ultimo) != 0)
+        return cargarNPosteos(&feed->p, NULL, CAMBIO_PUBLICACIONES, agregarAlFinal);
+
+    claveDePosteo(&ultimo, &clave);
+    return cargarNPosteos(&feed->p, &clave, CAMBIO_PUBLICACIONES, agregarAlFinal);
+}
+
+/* Agrega al comienzo de la ventana los CAMBIO_PUBLICACIONES posteos que van antes del primero. */
+static int cargarAnteriores(tFeed* feed)
+{
+    tPosteo primero;
+    IndPosteo clave;
+
+    if(obtenerPosicionN(&feed->p, &primero, sizeof(tPosteo), 0) != 0)
+        return 0;
+
+    claveDePosteo(&primero, &clave);
+    return cargarNPosteosAtras(&feed->p, &clave, CAMBIO_PUBLICACIONES);
+}
+
 void iniciarFeed(tFeed* feed)
 {
     crearListaD(&feed->p);
     feed->posteo_actual = 0;
-    feed->inicio = 0;
-    feed->offset = (long)cargarNPosteos(&feed->p, 0,
-                   MAX_PUBLICACIONES, agregarAlFinal) * (long)sizeof(tPosteo);
+    cargarNPosteos(&feed->p, NULL, MAX_PUBLICACIONES, agregarAlFinal);
 }
 
 void siguientePosteo(tFeed* feed)
@@ -131,8 +184,7 @@ void siguientePosteo(tFeed* feed)
 
         if (ok != 0)
         {
-            cargados = cargarNPosteos(&feed->p, feed->offset,
-                                      CAMBIO_PUBLICACIONES, agregarAlFinal);
+            cargados = cargarSiguientes(feed);
 
             if (cargados > 0)
             {
@@ -142,8 +194,6 @@ void siguientePosteo(tFeed* feed)
                 }
 
                 feed->posteo_actual -= cargados;
-                feed->offset += (long)cargados * (long)sizeof(tPosteo);
-                feed->inicio += (long)cargados * (long)sizeof(tPosteo);
 
                 ok = obtenerPosicionN(&feed->p, &posteo, sizeof(tPosteo), feed->posteo_actual);
             }
@@ -165,34 +215,30 @@ void posteoAnterior(tFeed* feed)
 {
     tPosteo posteo;
     int cargados;
-    int objetivo;
     int j;
 
+    /* retroceder dos paginas (la que se mostro y la anterior). OJO: no limitar a 0 todavia,
+       un valor negativo significa "faltan posteos antes del comienzo de la ventana" */
     feed->posteo_actual -= 6;
+
+    while (feed->posteo_actual < 0)
+    {
+        cargados = cargarAnteriores(feed);
+        if (cargados == 0)
+            break;                      /* no hay mas posteos antes: estamos en el principio */
+
+        /* entraron al comienzo: para mantener el tamanio de la ventana salen del final */
+        for (j = 0; j < cargados; j++)
+        {
+            quitarDelFinal(&feed->p, &posteo, sizeof(tPosteo));
+        }
+
+        feed->posteo_actual += cargados;
+    }
+
     if (feed->posteo_actual < 0)
     {
         feed->posteo_actual = 0;
-    }
-
-    objetivo = feed->posteo_actual - 2;
-
-    if (objetivo < 0)
-    {
-        cargados = cargarNPosteosAtras(&feed->p, feed->inicio, CAMBIO_PUBLICACIONES);
-
-        if (cargados > 0)
-        {
-            for (j = 0; j < cargados; j++)
-            {
-                quitarDelComienzo(&feed->p, &posteo, sizeof(tPosteo));
-            }
-
-            feed->posteo_actual += cargados;
-            feed->offset -= (long)cargados * (long)sizeof(tPosteo);
-            feed->inicio -= (long)cargados * (long)sizeof(tPosteo);
-
-            objetivo = feed->posteo_actual - 2;
-        }
     }
 
     siguientePosteo(feed);
@@ -201,9 +247,7 @@ void cargarPostsFiltrados(tFeed* feed, int cmp(void*a, void*b), void* parametroF
 {
     crearListaD(&feed->p);
     feed->posteo_actual = 0;
-    feed->offset = cargarNPosteosFiltrado(&feed->p, 0,
-                   MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro) * sizeof(tPosteo);
-    feed->inicio = 0;
+    cargarNPosteosFiltrado(&feed->p, NULL, MAX_PUBLICACIONES, agregarAlFinal, cmp, parametroFiltro);
 }
 
 void siguientePosteoFiltrados(tFeed* feed)

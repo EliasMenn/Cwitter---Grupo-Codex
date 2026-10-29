@@ -12,8 +12,6 @@
 typedef struct{
    tListaDoble p;
    int posteo_actual;
-   long offset;
-   long inicio;
 }tFeed;
 
 typedef struct{
