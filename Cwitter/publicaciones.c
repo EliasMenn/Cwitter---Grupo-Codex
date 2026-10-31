@@ -4,7 +4,7 @@ void mostrarPosteo(tPosteo pub)
 {
     char buffer[20];
     strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M", localtime(&pub.fecha));
-    printf("[Tweet #%u]%s @%s[%c]", pub.id, buffer, pub.nombreUsuario, pub.verificado);
+    printf("[Tweet #%u] %s %s%s[%c]", pub.id, buffer, (pub.nombreUsuario[0] == '@' ? "" : "@"), pub.nombreUsuario, pub.verificado);
     if(pub.id_padre != 0)
         printf(" (en respuesta a #%u)", pub.id_padre);
     printf(":\n  \"%s\"\n\n", pub.publicacion);
