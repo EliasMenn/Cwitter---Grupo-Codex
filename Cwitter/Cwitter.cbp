@@ -30,7 +30,12 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add directory="C:/libs/curl/curl-8.22.0_3-win64-mingw/include" />
 		</Compiler>
+		<Linker>
+			<Add library="curl" />
+			<Add directory="C:/libs/curl/curl-8.22.0_3-win64-mingw/lib" />
+		</Linker>
 		<Unit filename="almacenamiento.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -213,7 +213,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             printf("+========================================+\n");
             printf("|         << NUEVA PUBLICACION >>        |\n");
             printf("+========================================+\n\n");
-            printf("Escribe tu tweet (Max 140 caracteres):\n> ");
+            printf("Escribe tu tweet (Max %d caracteres):\n> ", MAX_CHARS);
             if(guardarPosteo(*usuarioLogueado) == 0)
             {
                 printf("\nPublicacion guardada exitosamente.\n");
@@ -430,7 +430,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
                         }
                         limpiar_buffer();
 
-                        leer_cadena("Ingrese el nuevo texto del tweet (Max 140 caracteres):\n> ", nuevoTexto, sizeof(nuevoTexto));
+                        leer_cadena("Ingrese el nuevo texto del tweet (Max 280 caracteres):\n> ", nuevoTexto, sizeof(nuevoTexto));
 
                         if(strlen(nuevoTexto) == 0)
                         {
