@@ -1,13 +1,47 @@
 #include "publicaciones.h"
 
+static int obtenerNivelProfundidad(unsigned idPadre)
+{
+    int nivel = 0;
+    IndPosteo p;
+    unsigned cur = idPadre;
+
+    while(cur != 0 && nivel < 50 && indices_buscar_posteo((int)cur, &p))
+    {
+        nivel++;
+        cur = (unsigned)p.id_padre;
+    }
+    return nivel;
+}
+
 void mostrarPosteo(tPosteo pub)
 {
     char buffer[20];
     strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M", localtime(&pub.fecha));
-    printf("[Tweet #%u] %s %s%s[%c]", pub.id, buffer, (pub.nombreUsuario[0] == '@' ? "" : "@"), pub.nombreUsuario, pub.verificado);
-    if(pub.id_padre != 0)
-        printf(" (en respuesta a #%u)", pub.id_padre);
-    printf(":\n  \"%s\"\n\n", pub.publicacion);
+
+    int nivel = obtenerNivelProfundidad(pub.id_padre);
+
+    if(nivel == 0)
+    {
+        printf("[Tweet #%u] %s @%s[%c]:\n", pub.id, buffer, pub.nombreUsuario, pub.verificado);
+        printf("  \"%s\"\n\n", pub.publicacion);
+    }
+    else
+    {
+        int sangriaVisual = (nivel > 5) ? 5 : nivel;
+        int espaciosHeader = (sangriaVisual - 1) * 4 + 2;
+        int espaciosCuerpo = espaciosHeader + 6;
+
+        for(int i = 0; i < espaciosHeader; i++)
+            putchar(' ');
+
+        printf("|-- [Tweet #%u] %s @%s[%c] (en respuesta a #%u):\n",
+               pub.id, buffer, pub.nombreUsuario, pub.verificado, pub.id_padre);
+
+        for(int i = 0; i < espaciosCuerpo; i++)
+            putchar(' ');
+        printf("\"%s\"\n\n", pub.publicacion);
+    }
 }
 
 void crearPosteo (tPosteo* pub, tUsuario user)
