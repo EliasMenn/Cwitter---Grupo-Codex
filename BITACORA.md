@@ -166,100 +166,71 @@ Tras Realizar analisis de los requisitos nuevos, optamos por modificar los sigui
 
 # Sprint 3
 
-## 1. Modificaciones Realizadas sobre Entidades y Límites
+## 1 Modificaciones necesarias:
 
-### 1.1. Límite de Caracteres en Publicaciones (`MAX_CHARS` y `LARGO_MAX`)
-* **Requisito del cliente**: Aumentar la longitud permitida de las publicaciones de 140 a 280 caracteres.
-* **Ajuste técnico**:
-  * Se redefinió `MAX_CHARS` a `280` en `publicaciones.h`.
-  * Se redefinió `LARGO_MAX` como `(MAX_CHARS + 1)` (281 bytes), asegurando el espacio para el terminador nulo (`'\0'`) en la estructura `tPosteo` y en los buffers de lectura.
-  * Se actualizaron los textos de la interfaz en `menu.c` y las validaciones de entrada en `publicaciones.c`.
+Tras realizar analisis de los requisitos nuevos, optamos por modificar los siguientes campos y funciones:
 
-### 1.2. Hilos de Conversación y Respuestas Anidadas (`id_padre`)
-* **Requisito del cliente**: Permitir responder a cualquier tweet y que esas respuestas puedan recibir a su vez otras respuestas, sin límite de profundidad.
-* **Ajuste técnico**:
-  * Se incorporó el campo `unsigned id_padre` en la estructura `tPosteo`.
-  * Un valor de `id_padre == 0` representa un posteo raíz (independiente).
-  * Un valor de `id_padre > 0` vincula la publicación como respuesta al tweet con dicho identificador.
+### 1.1 Publicaciones:
+* Se amplio el limite maximo de caracteres de 140 a 280 caracteres (`MAX_CHARS 280` y `LARGO_MAX (MAX_CHARS + 1)` en `publicaciones.h`).
+* Se le agrego el campo `id_padre` a la estructura `tPosteo` para permitir registrar relaciones de respuesta entre tweets (`0` = tweet raiz, `>0` = respuesta al tweet con dicho ID).
+* Se modifico `mostrarPosteo` para calcular la profundidad del posteo en memoria y aplicar sangria proporcional en el feed, distinguiendo visualmente los distintos niveles de profundidad de la conversacion.
 
----
+### 1.2 Formato de persistencia:
+* Se actualizo el archivo binario `datos/posteos.dat` con el nuevo tamaño de registro de longitud fija (328 bytes). Al arrancar el programa o consolidar posteos, `almacenamiento_reconstruir_indices` recorre el archivo y regenera los indices en memoria.
 
-## 2. Estudio de Escalabilidad y Benchmark de Búsqueda por ID
+## 2 Implementaciones nuevas:
 
-Siguiendo las recomendaciones del cliente antes de modificar el diseño original, se procedió a medir empíricamente el comportamiento de la búsqueda de tweets ante volúmenes crecientes de datos (100, 1.000, 10.000 y 100.000 registros).
+### 2.1 Arbol AVL (`global/arbol.c` y `global/arbol.h`):
+* Se implemento un TDA de Arbol Binario de Busqueda autobalanceado (AVL) con calculo de altura, factor de equilibrio y rotaciones simples y dobles para mantener un ordenamiento en memoria en tiempo $O(\log N)$.
 
-### 2.1. Metodología de Medición
-Se desarrolló una herramienta automatizada de benchmark (`benchmark.c`) utilizando `QueryPerformanceCounter` en Windows para garantizar precisión de microsegundos. Se evaluó el **peor caso** (búsqueda de un ID inexistente al final de la colección) comparando la búsqueda secuencial del Sprint 1 frente a la búsqueda indexada en memoria del Sprint 3.
+### 2.2 Indices de Posteos y Respuestas (`indices.c` e `indices.h`):
+* `idxPosteos`: Arbol AVL que indexa todos los tweets en memoria ordenados por condicion de verificado y por ID descendente.
+* `idxRespuestas`: Arbol AVL que indexa unicamente las respuestas, ordenadas por `id_padre`, condicion de verificado y orden cronologico.
+* Se implemento la navegacion del feed (`indices_siguiente_feed` e `indices_anterior_feed`) intercalando las respuestas inmediatamente debajo de su posteo padre mediante un recorrido en profundidad (DFS).
 
-### 2.2. Tabla Comparativa de Rendimiento (Peor Caso)
+### 2.3 Respuesta a Tweets en Menu:
+* Se agrego la opcion 8 en el menu de usuario para responder a cualquier tweet por ID, validando su existencia previamente en el indice antes de solicitar el texto.
 
-| Cantidad de Tweets | Búsqueda Secuencial en Disco (Sprint 1) | Comparaciones / Lecturas (Sprint 1) | Búsqueda Indexada AVL (Sprint 3) | Comparaciones en Árbol (Sprint 3) |
+## 3 Estudio de Rendimiento y Busqueda por ID (Escalabilidad):
+
+Para evaluar la eficiencia del sistema ante un volumen grande de tweets, se realizo una medicion comparativa de la busqueda por ID en el peor caso (busqueda de un ID inexistente) evaluando la busqueda secuencial en disco (Sprint 1) frente a la nueva busqueda indexada en Arbol AVL en memoria (Sprint 3) para 100, 1.000, 10.000 y 100.000 tweets:
+
+| Cantidad de Tweets | Busqueda Lineal en Disco (Sprint 1) | Comparaciones Lineales | Busqueda AVL en Memoria (Sprint 3) | Comparaciones en Arbol |
 | :---: | :---: | :---: | :---: | :---: |
 | **100** | 0.022 ms | 100 | 0.00004 ms | **14** |
 | **1.000** | 0.186 ms | 1.000 | 0.00005 ms | **20** |
 | **10.000** | 3.310 ms | 10.000 | 0.00010 ms | **28** |
 | **100.000** | **26.465 ms** | **100.000** | **0.00010 ms** | **34** |
 
-### 2.3. Análisis de Resultados y Justificación del Reemplazo
-* **Búsqueda del Sprint 1 (Lineal en Disco)**:
-  * Presenta una complejidad temporal $O(N)$ tanto en tiempo como en accesos a disco. Al pasar de 10.000 a 100.000 tweets, el tiempo saltó de 3.31 ms a 26.46 ms, y requirió escanear 32.8 MB de archivo de principio a fin. Esto confirmó que la búsqueda secuencial original no era sostenible para una plataforma en crecimiento masivo.
-* **Búsqueda del Sprint 3 (Índice en Memoria con Árbol AVL)**:
-  * Presenta una complejidad logarítmica estricta $O(\log N)$. Para 100.000 tweets, el peor caso requirió apenas **34 comparaciones en memoria RAM**, resolviéndose en una fracción insignificante de milisegundo (0.0001 ms).
-  * Si se necesita leer el registro completo desde disco, el índice entrega el `offset` exacto en bytes, reduciendo el acceso físico a **1 solo `fseek` y 1 solo `fread`**.
+### Analisis de resultados:
+* La busqueda lineal del Sprint 1 presenta una complejidad temporal $O(N)$ y lee todo el archivo secuencialmente (32.8 MB para 100.000 tweets), degradandose en proporcion directa a la cantidad de tweets.
+* La busqueda con indice AVL en memoria reduce la complejidad a $O(\log N)$, requiriendo apenas 34 comparaciones para 100.000 registros y resolviendo la busqueda en 0.0001 ms. Una vez localizado en el indice, el acceso al registro en disco se realiza de forma directa en $O(1)$ mediante un unico `fseek` al offset guardado.
 
----
+## 4 Estructuras de datos elegidas y justificacion:
 
-## 3. Estructuras de Datos Elegidas y Justificación
-
-### 3.1. Índices en Memoria: Árboles Balanceados AVL (`tArbol`)
-* **Problema a resolver**: Localizar rápidamente cualquier tweet por su ID para permitir respuestas, ediciones o eliminaciones, y además mantener agrupadas las respuestas de cada conversación.
+### 4.1 Representacion de los Hilos de Conversacion:
+* **Problema a resolver**: Representar conversaciones ramificadas (donde un tweet puede tener multiples respuestas y estas a su vez sus propias respuestas sin limite de niveles) y visualizarlas con sangria en el feed manteniendo la paginacion de ventana movil de 3 tweets.
 * **Alternativas consideradas**:
-  1. *Vector dinámico ordenado con búsqueda binaria*: Si bien la búsqueda es $O(\log N)$, la inserción de nuevos tweets exige redimensionar con `realloc` y desplazar bloques masivos de memoria ($O(N)$), resultando ineficiente y propensa a fallos de fragmentación.
-  2. *Tabla Hash*: Ofrece búsqueda promedio $O(1)$, pero no mantiene los elementos ordenados, lo que dificulta el recorrido secuencial de respuestas y la prioridad de usuarios verificados.
-  3. *Árbol AVL (Árbol Binario de Búsqueda Autobalanceado)*: Mantiene balanceada su altura mediante rotaciones simples y dobles cuando el factor de equilibrio excede $[-1, 1]$, garantizando altura máxima $\le 1.44 \log_2(N)$.
-* **Decisión y justificación**: Se adoptó el **Árbol AVL** (`global/arbol.c` y `global/arbol.h`). Se instancian dos índices en memoria:
-  * `idxPosteos`: Indexa todos los posteos ordenados por verificación (`verificado` primero) y por ID descendente.
-  * `idxRespuestas`: Indexa únicamente las respuestas, ordenadas primariamente por `id_padre`, luego por `verificado` y por orden cronológico.
+  1. *Lista lineal simple*: Descartada porque aplana la conversacion y pierde la relacion de bifurcacion entre respuestas hermanas.
+  2. *Arbol N-ario explicito en disco*: Descartado por la complejidad de mantener punteros en archivos y el desperdicio de espacio.
+* **Decision y justificacion**: Se utilizo un modelo de **Arbol N-ario implicito** resuelto en memoria:
+  * El indice AVL `idxRespuestas` agrupa las respuestas por `id_padre`.
+  * La funcion `obtenerNivelProfundidad` calcula en tiempo real el nivel del tweet subiendo por la cadena de padres en el indice ($O(\text{nivel} \cdot \log N)$).
+  * El visor del feed recorre en profundidad (DFS) mostrando cada tweet con sangria proporcional a su nivel y manteniendo la lista doblemente enlazada de 3 tweets por pantalla.
 
-### 3.2. Representación y Visualización de los Hilos de Conversación
-* **Problema a resolver**: Mostrar las conversaciones jerárquicas con distintos niveles de profundidad dentro del feed general, respetando la paginación de ventana móvil (3 tweets por pantalla) de la lista doblemente enlazada.
-* **Decisión y justificación**:
-  * **Modelo lógico (Árbol N-ario)**: Un tweet raíz puede tener $N$ respuestas directas, y cada una de ellas sub-respuestas. Este árbol N-ario se recorre en profundidad (**DFS - Depth First Search**) combinando el avance del feed con el índice `idxRespuestas`.
-  * **Cálculo dinámico de profundidad**: En lugar de sobrecargar el archivo de disco con campos redundantes, la función `obtenerNivelProfundidad(id_padre)` consulta el índice AVL en memoria subiendo por los padres hasta la raíz en tiempo $O(\text{nivel} \cdot \log N)$, lo cual es instantáneo.
-  * **Sangría visual escalonada**: En el feed general, cada tweet evalúa su nivel: el nivel 0 se muestra al margen, mientras que los niveles $\ge 1$ se muestran sangrados con espacios proporcionales y el indicador explícito `(en respuesta a #padre)`, permitiendo al usuario identificar con total claridad qué responde a qué sin abandonar el feed.
+## 5 Registro de Uso de Inteligencia Artificial (IA)
 
----
+* **Prompt Utilizado:**
+  > *"Como podemos medir con precision el tiempo de busqueda en peor caso y comparaciones entre busqueda secuencial en disco y arbol AVL para 100, 1.000, 10.000 y 100.000 registros en C sobre Windows?"*
+* **Resumen de la respuesta:**
+  > *"La IA propuso utilizar QueryPerformanceCounter de Windows para medicion en microsegundos, instrumentar un contador dentro de la funcion de comparacion del arbol AVL y buscar IDs inexistentes para forzar el peor caso."*
+* **Decision del equipo:**
+  > *"Implementamos la herramienta de benchmark con dicha metodologia, obteniendo los datos reales de rendimiento que demostraron la necesidad de migrar de O(N) a O(log N) para la escalabilidad del sistema."*
 
-## 4. Formato y Estrategia de Persistencia Modificada
-
-Para asegurar que las relaciones jerárquicas entre tweets sobrevivan al cierre del programa:
-
-1. **Estructura en Disco (`datos/posteos.dat`)**:
-   * Se expandió el registro de longitud fija `tPosteo` incorporando `unsigned id_padre` (4 bytes).
-   * Al ser de tamaño fijo uniforme (328 bytes por tweet con el texto de 280 caracteres), se conserva la capacidad de acceso aleatorio directo vía `fseek(arch, offset, SEEK_SET)`.
-2. **Reconstrucción al Iniciar (`almacenamiento_reconstruir_indices`)**:
-   * Al abrir la aplicación, se lee secuencialmente `datos/posteos.dat` una única vez y se pueblan los árboles AVL `idxPosteos` e `idxRespuestas` con sus respectivas posiciones (`offset`).
-   * Al cerrar sesión o publicar, la función `combinarPosteos()` consolida los tweets temporales en el archivo histórico y regenera los índices en memoria para mantener sincronizados los offsets.
-
----
-
-## 5. Registro de Uso de Inteligencia Artificial (IA)
-
-En cumplimiento con la modalidad de trabajo de la cátedra, se detallan las consultas y asistencias de IA durante este sprint:
-
-### Interacción 1: Medición de Rendimiento y Benchmark de Búsqueda
-* **Prompt utilizado**:
-  > *"¿Cómo podemos diseñar un benchmark en C para medir el peor caso de búsqueda secuencial en archivo binario vs. búsqueda en árbol AVL en memoria para 100, 1.000, 10.000 y 100.000 registros en Windows?"*
-* **Resumen de la respuesta**:
-  La IA propuso utilizar la API de temporización de alta resolución de Windows (`QueryPerformanceCounter` y `QueryPerformanceFrequency`), instrumentar un contador de comparaciones dentro de la función de comparación del árbol AVL y evaluar el caso de búsqueda de claves inexistentes para garantizar la medición del peor caso real.
-* **Evaluación y decisión del equipo**:
-  Implementamos el script `benchmark.c` con dicha metodología. Obtuvimos mediciones reales en nuestro hardware que demostraron el pasaje de $O(N)$ a $O(\log N)$, las cuales volcamos en la tabla comparativa de esta bitácora.
-
-### Interacción 2: Integración de Jerarquías en la Ventana Móvil del Feed
-* **Prompt utilizado**:
-  > *"¿Cómo podemos representar visualmente los niveles de profundidad de las respuestas dentro del visor de feed existente (que pagina de a 3 tweets) sin romper la lista doblemente enlazada ni crear un menú aparte?"*
-* **Resumen de la respuesta**:
-  Se planteó calcular la profundidad de cada tweet en tiempo de visualización subiendo por la cadena de `id_padre` a través del índice en memoria, e imprimir una sangría proporcional junto con la referencia al posteo padre.
-* **Evaluación y decisión del equipo**:
-  Adoptamos la solución creando `obtenerNivelProfundidad()` y adaptando `mostrarPosteo()`. El feed conservó su navegación fluida de 3 tweets por página, agregando claridad visual inmediata sobre la jerarquía de las conversaciones.
+* **Prompt Utilizado:**
+  > *"Como podemos representar visualmente los niveles de profundidad de las respuestas dentro del visor de feed existente que pagina de a 3 tweets sin romper la lista doblemente enlazada?"*
+* **Resumen de la respuesta:**
+  > *"La IA planteo calcular la profundidad dinamicamente consultando el indice de padres en memoria y aplicar una sangria proporcional en el texto de salida."*
+* **Decision del equipo:**
+  > *"Se implemento la funcion obtenerNivelProfundidad() y se adapto mostrarPosteo() para sangrar los tweets segun su nivel, logrando una visualizacion clara de los hilos de conversacion dentro del feed existente."*
 
