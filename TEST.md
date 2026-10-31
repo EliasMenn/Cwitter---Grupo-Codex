@@ -43,3 +43,25 @@
 | :---: | :--- | :--- | :--- | :---: |
 | **20** | **Publicacion de usuario no verificado no se reporta a FameCheck** | 1. Iniciamos sesion con una cuenta no verificada (`@usuario`).<br>2. Publicamos un nuevo tweet.<br>3. Revisamos el archivo `datos/log_fallos.txt`. | El tweet se publica localmente con normalidad y aparece en el feed; la aplicacion no intenta enviarlo a FameCheck (solo se reportan usuarios verificados) y no se genera ningun registro en el log de fallos. | **OK** |
 | **21** | **Modificacion de contraseña de usuario verificado mantiene verificacion** | 1. Iniciamos sesion con `@usuarioVer`.<br>2. Elegimos la opcion 6 "Modificar contrasenia" y asignamos una clave nueva.<br>3. Cerramos sesion e iniciamos sesion con la nueva clave. | La contraseña se actualiza correctamente en disco, el login es exitoso y la cuenta conserva su condicion de `[VERIFICADO]` tanto en memoria como en disco. | **OK** |
+
+---
+
+## Sprint 3
+
+| # | Situación a probar | Pasos de la operacion | Salida esperada | Estado |
+| :---: | :--- | :--- | :--- | :---: |
+| **22** | **Publicación de tweet extendido (hasta 280 caracteres)** | 1. Iniciar sesión con cualquier usuario activo.<br>2. Seleccionar `2. Nueva publicacion`.<br>3. Ingresar un texto de 220 caracteres (superando el límite antiguo de 140) y presionar ENTER. | La aplicación acepta la publicación, muestra `"Publicacion guardada exitosamente."` y en el feed el mensaje se visualiza completo sin cortes ni truncamiento. | **OK** |
+| **23** | **Validación de límite estricto de 280 caracteres** | 1. En el menú de usuario, seleccionar `2. Nueva publicacion`.<br>2. Intentar ingresar un texto de más de 280 caracteres (ej: 290 caracteres) y presionar ENTER. | La consola rechaza el texto imprimiendo `"Error: el texto supera los 280 caracteres. Intente de nuevo."` y solicita reingresar sin persistir datos inválidos. | **OK** |
+| **24** | **Respuesta directa a un tweet raíz (Hilo Nivel 1)** | 1. Con tweets disponibles en el feed (ej: Tweet #1), seleccionar la opción `8. Responder a un tweet`.<br>2. Ingresar ID `1`.<br>3. Redactar el texto de la respuesta y confirmar. | Muestra `"Respuesta guardada exitosamente."`. Al ingresar al feed, la respuesta aparece inmediatamente debajo del Tweet #1 con sangría de Nivel 1 y la referencia `(en respuesta a #1)`. | **OK** |
+| **25** | **Respuestas anidadas multinivel (Nivel 2 y 3 sin límite de profundidad)** | 1. Con Tweet #1 (raíz) y Tweet #2 (respuesta a #1), seleccionar opción `8` y responder al ID `2` creando Tweet #3.<br>2. Luego seleccionar opción `8` y responder al ID `3` creando Tweet #4.<br>3. Entrar a `1. Ver Feed de publicaciones`. | El feed presenta el hilo de conversación completo con sangría escalonada según la profundidad: Tweet #1 (margen), Tweet #2 (sangría nivel 1), Tweet #3 (sangría nivel 2) y Tweet #4 (sangría nivel 3). | **OK** |
+| **26** | **Intento de respuesta a un tweet inexistente** | 1. En el menú de usuario, seleccionar la opción `8. Responder a un tweet`.<br>2. Ingresar un ID que no existe en el sistema (ej: `9999`). | El sistema consulta el índice AVL en memoria, detecta que la clave no existe e imprime `"Error: No se encontro ningun tweet con el ID #9999."`, volviendo al menú sin solicitar texto. | **OK** |
+| **27** | **Persistencia de la jerarquía de hilos tras reinicio de la aplicación** | 1. Con un hilo de conversación creado (raíz y respuestas anidadas), cerrar sesión (`0`) y salir del programa (`0`).<br>2. Reabrir el ejecutable, iniciar sesión e ingresar al feed. | Al iniciar, `almacenamiento_reconstruir_indices()` reconstruye los árboles AVL desde disco. Toda la jerarquía de respuestas y las sangrías se visualizan idénticas a la sesión previa. | **OK** |
+
+---
+
+## Casos de Prueba adicionales - Sprint 3
+
+| # | Situación a probar | Pasos de la operacion | Salida esperada | Estado |
+| :---: | :--- | :--- | :--- | :---: |
+| **28** | **Prioridad de respuestas de usuarios verificados en un mismo hilo** | 1. Sobre un mismo tweet padre (ej: Tweet #7), responder primero con una cuenta no verificada (`Franco [N]`) y luego con una cuenta verificada (`usuarioVer [S]`).<br>2. Consultar el feed. | En el feed, el índice `idxRespuestas` posiciona primero la respuesta del usuario verificado (`[S]`) y luego la del no verificado (`[N]`), respetando el criterio de ordenamiento jerárquico. | **OK** |
+| **29** | **Escalabilidad de búsqueda por ID con 100.000 tweets** | 1. Ejecutar la suite de benchmark (`benchmark.c`) con datasets de 100, 1.000, 10.000 y 100.000 tweets en el peor caso (ID inexistente). | El índice AVL resuelve la búsqueda de 100.000 tweets en apenas 34 comparaciones ($0.0001\text{ ms}$), frente a 100.000 comparaciones y $26.4\text{ ms}$ de la búsqueda lineal en archivo. | **OK** |
