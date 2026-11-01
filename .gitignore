@@ -4,3 +4,8 @@ obj/
 *.layout
 .vscode/
 Cwitter/datos/
+
+!.gitignore
+!posteos_100.dat
+!posteos_1000.dat
+!posteos_10000.dat
