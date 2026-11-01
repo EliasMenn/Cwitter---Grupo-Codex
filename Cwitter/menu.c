@@ -213,7 +213,7 @@ static void menu_usuario_autenticado(tLista *indicesUsuarios, tPila *pilaLibres,
             printf("+========================================+\n");
             printf("|         << NUEVA PUBLICACION >>        |\n");
             printf("+========================================+\n\n");
-            printf("Escribe tu tweet (Max 140 caracteres):\n> ");
+            printf("Escribe tu tweet (Max 280 caracteres):\n> ");
             if(guardarPosteo(*usuarioLogueado) == 0)
             {
                 printf("\nPublicacion guardada exitosamente.\n");

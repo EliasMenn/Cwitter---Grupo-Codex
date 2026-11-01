@@ -2,9 +2,9 @@
 #define PUBLICACIONES_H_INCLUDED
 
 #define MAX_PUBLICACIONES 5
-#define MAX_CHARS 80
+#define MAX_CHARS 281
 #define CAMBIO_PUBLICACIONES 3
-#define LARGO_MAX 141
+#define LARGO_MAX 281
 #include <time.h>
 #include "global/ListaDoble.h"
 #include "usuarios.h"
