@@ -19,6 +19,7 @@ int main()
     unsigned ultimoId = 0;
 
     tFeed feed;
+    almacenamiento_reconstruir_indices();
     iniciarFeed(&feed);
 
     lista_crear(&indicesUsuarios);
@@ -37,6 +38,8 @@ int main()
     lista_vaciar(&indicesUsuarios);
     vaciarPila(&pilaLibres);
 
+    arbol_vaciar(indices_posteos());
+    arbol_vaciar(indices_respuestas());
     famecheck_limpiar();
     return 0;
 }

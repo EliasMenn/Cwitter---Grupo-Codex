@@ -4,6 +4,7 @@
 #include "global/lista.h"
 #include "global/ListaDoble.h"
 #include "global/pila.h"
+#include "indices.h"
 #include "usuarios.h"
 #include "publicaciones.h"
 #include "famecheck.h"
@@ -19,11 +20,13 @@ int almacenamiento_guardar_nuevo_usuario(tUsuario *usuario, tIndiceUsuario *indi
 int almacenamiento_leer_usuario_offset(long offset, tUsuario *usuarioDestino);
 int almacenamiento_baja_usuario(long offsetDat, long offsetIdx, tPila *pilaLibres);
 int almacenamiento_actualizar_usuario(long offsetDat, tUsuario *usuarioActualizado);
-int cargarNPosteos(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion));
-int cargarNPosteosFiltrado(tListaDoble* listaDoble, unsigned offset, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
+int almacenamiento_reconstruir_indices(void);
+int cargarNPosteos(tListaDoble* listaDoble, const IndPosteo* desde, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion));
+int cargarNPosteosFiltrado(tListaDoble* listaDoble, const IndPosteo* desde, unsigned cantPosteos, int Func(tListaDoble* p, void* informacion, size_t tam_informacion),
                            int cmp(void* a, void* b), void* parametro);
-int cargarNPosteosAtras(tListaDoble* p, unsigned inicio, int n);
+int cargarNPosteosAtras(tListaDoble* p, const IndPosteo* hasta, int n);
 int guardarPosteo(tUsuario usuario);
+int guardarRespuesta(tUsuario usuario, unsigned idPadre);
 int combinarPosteos();
 unsigned almacenamiento_obtener_proximo_id_posteo(void);
 int almacenamiento_eliminar_posteo(unsigned idPosteo, const char *nombreUsuario);
