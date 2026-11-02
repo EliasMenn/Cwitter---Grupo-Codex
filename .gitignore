@@ -3,4 +3,9 @@ obj/
 *.depend
 *.layout
 .vscode/
-Cwitter/datos/
+
+# Ignore everything in datos except the sample files
+Cwitter/datos/*
+!Cwitter/datos/posteos_100.dat
+!Cwitter/datos/posteos_1000.dat
+!Cwitter/datos/posteos_10000.dat

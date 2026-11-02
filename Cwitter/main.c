@@ -5,6 +5,7 @@
 #include "menu.h"
 #include "tests.h"
 #include "famecheck.h"
+#include <windows.h>
 
 // Poner en 1 para ejecutar tests definidos
 // Poner en 0 para ejecutar normalmente
@@ -12,6 +13,10 @@
 
 int main()
 {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
     famecheck_inicializar();
 
     tLista indicesUsuarios;
@@ -19,6 +24,7 @@ int main()
     unsigned ultimoId = 0;
 
     tFeed feed;
+    almacenamiento_reconstruir_indices();
     iniciarFeed(&feed);
 
     lista_crear(&indicesUsuarios);
@@ -37,6 +43,8 @@ int main()
     lista_vaciar(&indicesUsuarios);
     vaciarPila(&pilaLibres);
 
+    arbol_vaciar(indices_posteos());
+    arbol_vaciar(indices_respuestas());
     famecheck_limpiar();
     return 0;
 }

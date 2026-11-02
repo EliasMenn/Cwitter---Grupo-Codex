@@ -30,7 +30,12 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add directory="C:/libs/curl/curl-8.22.0_3-win64-mingw/include" />
 		</Compiler>
+		<Linker>
+			<Add library="curl" />
+			<Add directory="C:/libs/curl/curl-8.22.0_3-win64-mingw/lib" />
+		</Linker>
 		<Unit filename="almacenamiento.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -47,6 +52,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="global/ListaDoble.h" />
+		<Unit filename="global/arbol.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="global/arbol.h" />
 		<Unit filename="global/lista.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -55,6 +64,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="global/pila.h" />
+		<Unit filename="indices.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="indices.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
