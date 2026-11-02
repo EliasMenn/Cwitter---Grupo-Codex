@@ -5,6 +5,7 @@
 #include "menu.h"
 #include "tests.h"
 #include "famecheck.h"
+#include <windows.h>
 
 // Poner en 1 para ejecutar tests definidos
 // Poner en 0 para ejecutar normalmente
@@ -12,6 +13,10 @@
 
 int main()
 {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
     famecheck_inicializar();
 
     tLista indicesUsuarios;
