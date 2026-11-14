@@ -203,6 +203,24 @@ Para evaluar la eficiencia del sistema ante un volumen grande de tweets, se real
 * La busqueda lineal del Sprint 1 presenta una complejidad temporal $O(N)$ y lee todo el archivo secuencialmente (32.8 MB para 100.000 tweets), degradandose en proporcion directa a la cantidad de tweets.
 * La busqueda con indice AVL en memoria reduce la complejidad a $O(\log N)$, requiriendo apenas 34 comparaciones para 100.000 registros y resolviendo la busqueda en 0.0001 ms. Una vez localizado en el indice, el acceso al registro en disco se realiza de forma directa en $O(1)$ mediante un unico `fseek` al offset guardado.
 
+### Instrucciones de ejecucion del benchmark:
+Para compilar y realizar estas mediciones desde **Git Bash**, seguir los pasos:
+
+1. Ubicarse en la carpeta `Cwitter/`:
+   ```bash
+   cd Cwitter
+   ```
+2. Compilar el programa `benchmark.c` con los archivos de arbol e indices:
+   ```bash
+   gcc -O2 benchmark.c global/arbol.c indices.c -o benchmark.exe
+   ```
+   *(Si `gcc` no esta configurado en las variables de entorno, hay que indicar la ruta completa del compilador: `"C:/CodeBlocksPortable/codeblocks-20.03mingw-nosetup/MinGW/bin/gcc.exe" -O2 benchmark.c global/arbol.c indices.c -o benchmark.exe`)*
+3. Ejecutar el benchmark:
+   ```bash
+   ./benchmark.exe
+   ```
+*(El programa genera los datos temporales en `datos/`, ejecuta las pruebas comparativas mostrando la tabla por consola y elimina los archivos temporales al terminar).*
+
 ## 4. Estructuras de datos elegidas y justificacion:
 
 ### 4.1 Representacion de los Hilos de Conversacion:
